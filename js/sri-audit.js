@@ -7,17 +7,11 @@ var uuid = require('node-uuid');
 var Q = require('q');
 var $u = require('sri4node').utils;
 
-var configuration = require('../../configuration.js');
-
 var doAudit = function (db, elements, me, operation) {
   'use strict';
   var deferred = Q.defer();
   var auditItem;
-  var reqOptions = {
-    username: configuration.audit.username,
-    password: configuration.audit.password,
-    json: true
-  };
+
   elements.forEach(function (element) {
     auditItem = {
       key: uuid.v1(),
@@ -32,9 +26,9 @@ var doAudit = function (db, elements, me, operation) {
 
     var query = $u.prepareSQL();
     query.sql('INSERT INTO "versionsQueue" VALUES (').values({
-      key: auditItem.key,
-      document: auditItem
-     }).sql(')');
+                                                               key: auditItem.key,
+                                                               document: auditItem
+                                                             }).sql(')');
 
     $u.executeSQL(db, query)
     .then(function (value) {
