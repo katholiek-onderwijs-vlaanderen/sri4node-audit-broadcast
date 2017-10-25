@@ -6,6 +6,7 @@ var needle = require('needle');
 var uuid = require('node-uuid');
 var Q = require('q');
 var $u = require('sri4node').utils;
+var config;
 
 var doAudit = function (db, elements, me, operation) {
   'use strict';
@@ -54,5 +55,8 @@ exports = module.exports = {
     'use strict';
     return doAudit(db, elements, me, 'CREATE');
   },
-  init: require('./versionsQueue').init
+  init: function(pg, inputConfig){
+    config = inputConfig;
+    require('./versionsQueue').init(pg, config);
+  }
 };

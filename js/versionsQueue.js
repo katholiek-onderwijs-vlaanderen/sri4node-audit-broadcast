@@ -63,7 +63,6 @@ exports = module.exports = {
             dbUrl += '?' + searchPathPara;
           }
         }
-        console.log(dbUrl);
         $u.getConnection(pg, dbUrl)
         .then(function (database) {
           db = database;
