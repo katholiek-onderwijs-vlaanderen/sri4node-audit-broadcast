@@ -15,7 +15,16 @@ Initialize the sri4node-audit-broadcast module
 var audit = require('sri4node-audit-broadcast');
 audit.init(pg, {
   timeout: 10000,
-  host: configuration.audit.host
+  host: {
+    baseUrl: configuration.audit.host,
+    headers: {
+      headerName: "value"
+    },
+    auth: {
+      user: "username",
+      pass: "password"
+    }
+  }
 });
 ```
 
@@ -32,4 +41,3 @@ Add the after read functions.
   ...
 }
 ```
-

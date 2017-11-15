@@ -1,25 +1,21 @@
 {
   "name": "@kathondvla/sri4node-audit-broadcast",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "A module for sri4node to register sri-audit-broadcast messages.",
   "main": "js/sri-audit.js",
   "author": "Gunther Claes",
   "license": "private",
   "dependencies": {
     "express": "^4.16.2",
-    "needle": "^0.11.0",
     "node-uuid": "^1.4.7",
     "q": "^1.5.1",
     "qlimit": "^0.1.1",
+    "request": "^2.83.0",
     "sri4node": "^1.2.33"
   },
   "devDependencies": {},
-  "engines": {
-    "node": "4.1.1",
-    "npm": "2.14.8"
-  },
   "repository": {
     "type": "git",
-    "url": "git@bitbucket.org:vskovzw/angular-template.git"
+    "url": "https://github.com/katholiek-onderwijs-vlaanderen/sri4node-audit-broadcast"
   }
 }

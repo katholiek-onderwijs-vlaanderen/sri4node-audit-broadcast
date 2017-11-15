@@ -14,13 +14,14 @@ var doAudit = function (db, elements, me, operation) {
   var auditItem;
 
   elements.forEach(function (element) {
+    var type = element.path.match(/^\/(\/*.*)\/([0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})$/);
     auditItem = {
       key: uuid.v1(),
       person: '',
       timestamp: (new Date()).toJSON(),
       component: '',
       operation: operation,
-      type: (element.path.split('/'))[1],
+      type: type[1].split('/').join('_').toUpperCase(),
       resource: element.path,
       document: element.body
     };

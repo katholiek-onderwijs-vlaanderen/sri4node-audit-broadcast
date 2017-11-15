@@ -2,42 +2,53 @@
  * Created by guntherclaes on 24/10/17.
  */
 
-var needle = require('needle');
+var request = require('request');
 var Q = require('q');
 var $u = require('sri4node').utils;
 var qlimit = require('qlimit');
 var limit = qlimit(1);
-
 
 var putVersion = function (document, config, db) {
   'use strict';
   var d = Q.defer();
   var query = $u.prepareSQL('');
   query.sql('DELETE FROM "versionsQueue" WHERE key = ').param(document.key);
-  needle.put(config.host.baseUrl + '/versions/' + document.key, document, {headers: config.host.headers, json: true}, function (err, resp) {
-   if (err) {
-     console.warn('[sri-audit] failed with error: ' + err);
-     d.resolve();
-   } else if (resp.statusCode !== 201 && resp.body.errors[0].body.code === 'same.version') {
-     $u.executeSQL(db, query).then(function (result) {
-       d.resolve();
-       console.log('[sri-audit] version was same version.');
-     }).catch(function (reason) {
-       console.error(reason);
-       d.resolve();
-     });
-   } else if (resp.statusCode !== 201) {
-     console.warn('[sri-audit] failed with status code: ' + resp.statusCode);
-   } else {
-     $u.executeSQL(db, query).then(function (result) {
-       console.log('[sri-audit] success');
-       d.resolve();
-     }).catch(function (reason) {
-       console.error(reason);
-       d.resolve();
-     });
-   }
-   });
+  var options = {
+    url: config.host.baseUrl + '/versions/' + document.key,
+    method: 'PUT',
+    json: document
+  };
+  if(config.host.headers){
+    options.headers = config.host.headers;
+  }
+  if(config.host.headers){
+    options.auth = config.host.auth;
+  }
+
+  request(options, function (err, resp, body) {
+    if (err) {
+      console.warn('[sri-audit] failed with error: ' + err);
+      d.resolve();
+    } else if (resp.statusCode !== 201 && (body && body.errors && body.errors[0].body.code === 'same.version')) {
+      $u.executeSQL(db, query).then(function (result) {
+        d.resolve();
+        console.log('[sri-audit] version was same version.');
+      }).catch(function (reason) {
+        console.error(reason);
+        d.resolve();
+      });
+    } else if (resp.statusCode !== 201) {
+      console.warn('[sri-audit] failed with status code: ' + resp.statusCode);
+    } else {
+      $u.executeSQL(db, query).then(function (result) {
+        console.log('[sri-audit] success');
+        d.resolve();
+      }).catch(function (reason) {
+        console.error(reason);
+        d.resolve();
+      });
+    }
+  });
   return d.promise;
 };
 
