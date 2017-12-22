@@ -1,0 +1,10 @@
+{
+  "interval": 10000,
+  "sriUser": "***REMOVED***",
+  "sriPassword": "***REMOVED***",
+  "vskoApiHost": "https://testapi.katholiekonderwijs.vlaanderen",
+  "accessToken": {
+    "name": "VSKO-ACCESSTOKEN-TEST",
+    "value": "***REMOVED***"
+  }
+}

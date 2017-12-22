@@ -2,62 +2,76 @@
  * Created by guntherclaes on 26/11/15.
  */
 
-var needle = require('needle');
-var uuid = require('node-uuid');
-var Q = require('q');
-var $u = require('sri4node').utils;
-var config;
+const pMap = require('p-map');
+const uuid = require('node-uuid');
+const { pgConnect, pgExec } = require('../../sri4node/js/common.js')
 
-var doAudit = function (db, elements, me, operation) {
+let $u
+
+const doAudit = async function (tx, sriRequest, elements, component, operation) { 
   'use strict';
-  var deferred = Q.defer();
-  var auditItem;
 
-  elements.forEach(function (element) {
-    var type = element.path.match(/^\/(\/*.*)\/([0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})$/);
-    auditItem = {
+  await pMap(elements, async ({permalink, incoming: object}) => {
+
+      //TODO: don't use own regex -> put one in sri4node in utils
+    const type = permalink.match(/^\/(\/*.*)\/([0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})$/);
+    const auditItem = {
       key: uuid.v1(),
-      person: '',
+      person: sriRequest.userObject ? '/persons/' + sriRequest.userObject.uuid : '',
       timestamp: (new Date()).toJSON(),
-      component: '',
+      component: component,
       operation: operation,
       type: type[1].split('/').join('_').toUpperCase(),
-      resource: element.path,
-      document: element.body
+      resource: permalink,
+      document: object
     };
 
-    var query = $u.prepareSQL();
+    const query = $u.prepareSQL();
     query.sql('INSERT INTO "versionsQueue" VALUES (').values({
                                                                key: auditItem.key,
                                                                document: auditItem
                                                              }).sql(')');
-
-    $u.executeSQL(db, query)
-    .then(function (value) {
-    }).catch(function (reason) {
+    try {
+      await pgExec(tx, query)
+    } catch (reason) {
       console.error('[sri-audit] put version to database failed for resource: ' + element.path);
-    });
-
-  });
-  deferred.resolve();
-  return deferred.promise;
+      throw new SriError({status: 500, errors: [{ code: 'version.queue.insert.failed',  msg: 'Storage of new version in versionsQueue failed.' }]})
+    }
+  } , {concurrency: 1} )
 };
-exports = module.exports = {
 
-  update: function (db, elements, me) {
-    'use strict';
-    return doAudit(db, elements, me, 'UPDATE');
-  },
-  delete: function (db, elements, me) {
-    'use strict';
-    return doAudit(db, elements, me, 'DELETE');
-  },
-  create: function (db, elements, me) {
-    'use strict';
-    return doAudit(db, elements, me, 'CREATE');
-  },
-  init: function(pg, inputConfig){
-    config = inputConfig;
-    require('./versionsQueue').init(pg, config);
+
+
+
+module.exports = function (component) {
+  'use strict';
+
+  return {
+    install: async function (sriConfig, db) {
+
+      $u = sriConfig.utils
+
+      const query = $u.prepareSQL('create versionsQueue');
+      query.sql(
+          `CREATE TABLE IF NOT EXISTS "versionsQueue"
+           (
+              key UUID PRIMARY KEY,
+              document JSONB
+           );`)
+           //INDEX IF NOT EXISTS is only supported from postgres 9.5 
+           // but why do we need this index?
+           //CREATE UNIQUE INDEX IF NOT EXISTS versionsQueue_key_uindex ON "versionsQueue" (key);`)
+      await pgExec(db, query)
+
+      require('./versionsQueue').init(sriConfig, db);
+
+      sriConfig.resources.forEach( resource => {
+        // audit functions should be LAST function in handler lists
+        resource.afterinsert.push((tx, sriRequest, elements) => doAudit(tx, sriRequest, elements, component, 'CREATE'))
+        resource.afterupdate.push((tx, sriRequest, elements) => doAudit(tx, sriRequest, elements, component, 'UPDATE'))
+        resource.afterdelete.push((tx, sriRequest, elements) => doAudit(tx, sriRequest, elements, component, 'DELETE'))
+      })
+    }
   }
+
 };

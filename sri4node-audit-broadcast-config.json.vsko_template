@@ -1,0 +1,7 @@
+{
+  "interval": #{ audit_interval },
+  "sriUser": "#{app_sri_user}",
+  "sriPassword": "#{app_sri_pw}",
+  "vskoApiHost": "#{VSKO_API_HOST + "." + VSKO_DOMAIN}",
+  "accessToken": #{JSON.stringify(if accessToken then accessToken else {})}
+}

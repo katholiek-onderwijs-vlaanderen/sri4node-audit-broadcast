@@ -2,106 +2,85 @@
  * Created by guntherclaes on 24/10/17.
  */
 
-var request = require('request');
-var Q = require('q');
-var $u = require('sri4node').utils;
-var qlimit = require('qlimit');
-var limit = qlimit(1);
+const request = require('requestretry');
+const pMap = require('p-map');
+const { pgConnect, pgExec } = require('../../sri4node/js/common.js')
 
-var putVersion = function (document, config, db) {
+
+const common = require('./common');
+const config = require('./config');
+
+
+const putVersion = async function (document, sriConfig, db) {
   'use strict';
-  var d = Q.defer();
-  var query = $u.prepareSQL('');
-  query.sql('DELETE FROM "versionsQueue" WHERE key = ').param(document.key);
-  var options = {
-    url: config.host.baseUrl + '/versions/' + document.key,
-    method: 'PUT',
-    json: document
-  };
-  if(config.host.headers){
-    options.headers = config.host.headers;
-  }
-  if(config.host.headers){
-    options.auth = config.host.auth;
+
+  const credentials = { 
+      'user': '***REMOVED***', // config.sriUser,    TODO: reenable when sriuser is working!!
+      'pass': '***REMOVED***' //config.sriPassword, TODO: reenable when sriuser is working!!
   }
 
-  request(options, function (err, resp, body) {
-    if (err) {
-      console.warn('[sri-audit] failed with error: ' + err);
-      d.resolve();
-    } else if (resp.statusCode !== 201 && (body && body.errors && body.errors[0].body.code === 'same.version')) {
-      $u.executeSQL(db, query).then(function (result) {
-        d.resolve();
-        console.log('[sri-audit] version was same version.');
-      }).catch(function (reason) {
-        console.error(reason);
-        d.resolve();
-      });
-    } else if (resp.statusCode !== 201) {
-      console.warn('[sri-audit] failed with status code: ' + resp.statusCode);
+  const req = {
+    url: config.vskoApiHost + '/versions/' + document.key,
+    method: 'PUT',
+    json: document,
+    headers: common.getHeaders(config),
+    auth: credentials
+  };
+
+  const resp = await request(req)
+  const body = resp.body
+
+  const $u = sriConfig.utils;
+  const delQuery = $u.prepareSQL('');
+  delQuery.sql('DELETE FROM "versionsQueue" WHERE key = ').param(document.key);
+
+  if (resp.statusCode === 201) {
+    await pgExec(db, delQuery)
+    console.log('[sri-audit] success');      
+  } else {
+    if (body && body.errors && body.errors[0].body.code === 'same.version') {
+      await pgExec(db, delQuery)
+      console.log('[sri-audit] version was same version.');
     } else {
-      $u.executeSQL(db, query).then(function (result) {
-        console.log('[sri-audit] success');
-        d.resolve();
-      }).catch(function (reason) {
-        console.error(reason);
-        d.resolve();
-      });
+      console.warn('[sri-audit] failed with status code: ' + resp.statusCode);
     }
-  });
-  return d.promise;
+  }
 };
+
+
 
 exports = module.exports = {
 
-  init: function (pg, config) {
+  init: function (sriConfig, db) {
     'use strict';
-    var isRunning = false;
-    setInterval(function () {
-      var db, searchPathPara, dbUrl;
+    let isRunning = false;
+    const $u = sriConfig.utils
+
+    const check = async function () {
 
       if (!isRunning) {
         console.log('[sri-audit] Start version queue');
         isRunning = true;
 
-        //compose DB url
-        dbUrl = process.env.DATABASE_URL;
-        if (process.env.POSTGRES_SCHEMA) {
-          searchPathPara = 'search_path=' + process.env.POSTGRES_SCHEMA + ',public&ssl=true';
-          if (dbUrl.match('\\?')) {
-            dbUrl += '&' + searchPathPara;
-          } else {
-            dbUrl += '?' + searchPathPara;
-          }
-        }
-        $u.getConnection(pg, dbUrl)
-        .then(function (database) {
-          db = database;
-          var query = $u.prepareSQL();
+        try {
+          const query = $u.prepareSQL();
           query.sql('SELECT * FROM "versionsQueue"');
-          $u.executeSQL(db, query)
-          .then(function (values) {
-            console.log('[sri-audit] found ' + values.rowCount + ' versions');
-            Q.all(values.rows.map(limit(function (row) {
-              return putVersion(row.document, config, db);
-            }))).then(function () {
-              console.log('[sri-audit] Done.');
-              db.done();
-              isRunning = false;
-            });
-          })
-          .catch(function (reason) {
-            console.error(reason);
-            console.error('[sri-audit] error while fetching versions queue');
-          });
-        })
-        .finally(function () {
-          db.done();
-        });
+          const rows = await pgExec(db, query)
 
+          console.log('[sri-audit] found ' + rows.length + ' versions');
+          await pMap(rows, row => putVersion(row.document, sriConfig, db), {concurrency: 1} )
+
+          console.log('[sri-audit] Done.');
+        } catch(err) {
+          console.error(err);
+          console.error('[sri-audit] failed with error: ' + err);
+        }
+        isRunning = false;
       } else{
         console.log('[sri-audit] Still running. Not starting new.');
       }
-    }, config.timeout);
+    }
+
+    setInterval(check, config.interval);
   }
 };

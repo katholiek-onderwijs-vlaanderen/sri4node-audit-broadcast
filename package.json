@@ -10,8 +10,7 @@
     "node-uuid": "^1.4.7",
     "q": "^1.5.1",
     "qlimit": "^0.1.1",
-    "request": "^2.83.0",
-    "sri4node": "^1.2.33"
+    "request": "^2.83.0"
   },
   "devDependencies": {},
   "repository": {
