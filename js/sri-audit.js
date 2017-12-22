@@ -4,7 +4,7 @@
 
 const pMap = require('p-map');
 const uuid = require('node-uuid');
-const { pgConnect, pgExec } = require('../../sri4node/js/common.js')
+const { pgConnect, pgExec } = require('../../../sri4node/js/common.js')
 
 let $u
 

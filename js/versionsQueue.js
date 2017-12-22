@@ -4,7 +4,7 @@
 
 const request = require('requestretry');
 const pMap = require('p-map');
-const { pgConnect, pgExec } = require('../../sri4node/js/common.js')
+const { pgConnect, pgExec } = require('../../../sri4node/js/common.js')
 
 
 const common = require('./common');
