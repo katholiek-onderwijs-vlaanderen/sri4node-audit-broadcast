@@ -15,8 +15,8 @@ const putVersion = async function (document, sriConfig, db) {
   'use strict';
 
   const credentials = { 
-      'user': '***REMOVED***', // config.sriUser,    TODO: reenable when sriuser is working!!
-      'pass': '***REMOVED***' //config.sriPassword, TODO: reenable when sriuser is working!!
+      'user': config.sriUser,
+      'pass': config.sriPassword
   }
 
   const req = {
