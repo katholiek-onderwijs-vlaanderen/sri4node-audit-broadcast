@@ -6,25 +6,15 @@ const request = require('requestretry');
 const pMap = require('p-map');
 const { pgConnect, pgExec } = require('../../../sri4node/js/common.js')
 
-
-const common = require('./common');
-const config = require('./config');
-
-
-const putVersion = async function (document, sriConfig, db) {
+const putVersion = async function (document, pluginConfig, sriConfig, db) {
   'use strict';
 
-  const credentials = { 
-      'user': config.sriUser,
-      'pass': config.sriPassword
-  }
-
   const req = {
-    url: config.vskoApiHost + '/versions/' + document.key,
+    url: pluginConfig.versionApiBase + '/versions/' + document.key,
     method: 'PUT',
     json: document,
-    headers: common.getHeaders(config),
-    auth: credentials
+    headers: pluginConfig.headers
+    auth: pluginConfig.auth
   };
 
   const resp = await request(req)
@@ -51,7 +41,7 @@ const putVersion = async function (document, sriConfig, db) {
 
 exports = module.exports = {
 
-  init: function (sriConfig, db) {
+  init: function (pluginConfig, sriConfig, db) {
     'use strict';
     let isRunning = false;
     const $u = sriConfig.utils
@@ -68,7 +58,7 @@ exports = module.exports = {
           const rows = await pgExec(db, query)
 
           console.log('[sri-audit] found ' + rows.length + ' versions');
-          await pMap(rows, row => putVersion(row.document, sriConfig, db), {concurrency: 1} )
+          await pMap(rows, row => putVersion(row.document, pluginConfig, sriConfig, db), {concurrency: 1} )
 
           console.log('[sri-audit] Done.');
         } catch(err) {
@@ -81,6 +71,6 @@ exports = module.exports = {
       }
     }
 
-    setInterval(check, config.interval);
+    setInterval(check, pluginConfig.interval);
   }
 };

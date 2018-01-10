@@ -43,7 +43,7 @@ const doAudit = async function (tx, sriRequest, elements, component, operation) 
 
 
 
-module.exports = function (component) {
+module.exports = function (component, pluginConfig) {
   'use strict';
 
   return {
@@ -63,7 +63,7 @@ module.exports = function (component) {
            //CREATE UNIQUE INDEX IF NOT EXISTS versionsQueue_key_uindex ON "versionsQueue" (key);`)
       await pgExec(db, query)
 
-      require('./versionsQueue').init(sriConfig, db);
+      require('./versionsQueue').init(pluginConfig, sriConfig, db);
 
       sriConfig.resources.forEach( resource => {
         // audit functions should be LAST function in handler lists
