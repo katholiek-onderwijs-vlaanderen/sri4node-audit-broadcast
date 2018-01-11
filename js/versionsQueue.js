@@ -13,7 +13,7 @@ const putVersion = async function (document, pluginConfig, sriConfig, db) {
     url: pluginConfig.versionApiBase + '/versions/' + document.key,
     method: 'PUT',
     json: document,
-    headers: pluginConfig.headers
+    headers: pluginConfig.headers,
     auth: pluginConfig.auth
   };
 
