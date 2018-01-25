@@ -67,9 +67,9 @@ module.exports = function (component, pluginConfig) {
 
       sriConfig.resources.forEach( resource => {
         // audit functions should be LAST function in handler lists
-        resource.afterinsert.push((tx, sriRequest, elements) => doAudit(tx, sriRequest, elements, component, 'CREATE'))
-        resource.afterupdate.push((tx, sriRequest, elements) => doAudit(tx, sriRequest, elements, component, 'UPDATE'))
-        resource.afterdelete.push((tx, sriRequest, elements) => doAudit(tx, sriRequest, elements, component, 'DELETE'))
+        resource.afterInsert.push((tx, sriRequest, elements) => doAudit(tx, sriRequest, elements, component, 'CREATE'))
+        resource.afterUpdate.push((tx, sriRequest, elements) => doAudit(tx, sriRequest, elements, component, 'UPDATE'))
+        resource.afterDelete.push((tx, sriRequest, elements) => doAudit(tx, sriRequest, elements, component, 'DELETE'))
       })
     }
   }
