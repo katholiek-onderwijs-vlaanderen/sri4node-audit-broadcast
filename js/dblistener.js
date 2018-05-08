@@ -1,4 +1,4 @@
-const db = require("./db.js");
+let db;
 
 let connection;
 let channelName;
@@ -73,36 +73,37 @@ function reconnect(delay, maxAttempts) {
     });
 }
 
-function sendNotifications() {
+// function sendNotifications() {
 
-    if (connection) {
-        connection.none('NOTIFY $1~, $2', [channelName, 'test'])
-            .catch(error => {
-                console.log('Failed to Notify:', error); // unlikely to ever happen
-            })
-    }
+//     if (connection) {
+//         connection.none('NOTIFY $1~, $2', [channelName, 'test'])
+//             .catch(error => {
+//                 console.log('Failed to Notify:', error); // unlikely to ever happen
+//             })
+//     }
 
-}
+// }
 
-function connect(channel, table, key, onError, onNotif) {
+function connect(channel, table, key, onError, onNotif, dbobj) {
 
     channelName = channel;
     runOnError = onError;
     runOnNotif = onNotif;
     tableName = table;
     keyName = key;
+    db = dbobj;
     reconnect() // = same as reconnect(0, 1)
         .then(obj => {
             console.log('Successful Initial Connection');
             // obj.done(); - releases the connection
-            sendNotifications();
+            //sendNotifications();
         })
         .catch(error => {
             console.log('Failed Initial Connection:', error);
         });
 }
 
+
 module.exports = {
-    connect: connect,
-    test: sendNotifications
+    connect: connect
 }

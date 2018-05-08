@@ -4,7 +4,7 @@
 
 const request = require('requestretry');
 // const pMap = require('p-map');
-const { pgConnect, pgExec } = require('../../../sri4node/js/common.js');
+
 
 const PQueue = require('p-queue');
 const queue = new PQueue({ concurrency: 2 });
@@ -64,8 +64,8 @@ async function runListener() {
           await runJob(job);
         });
       }
-
-    }
+    },
+    db
   );
 }
 
@@ -119,7 +119,7 @@ exports = module.exports = {
     pluginConfig = plugConf;
     sriConfig = sriConf;
     db = d;
-    
+
     console.log('[sri-audit] Start version queue');
     await installTriggers();
     runJobsFromDB();

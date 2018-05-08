@@ -4,9 +4,6 @@
 
 const pMap = require('p-map');
 const uuid = require('node-uuid');
-const { pgConnect, pgExec } = require('../../../sri4node/js/common.js')
-
-let $u
 
 const doAudit = async function(tx, sriRequest, elements, component, operation) {
   'use strict';
@@ -45,9 +42,6 @@ module.exports = function(component, pluginConfig) {
   return {
     install: async function(sriConfig, db) {
 
-      $u = sriConfig.utils
-
-      const query = $u.prepareSQL('create versionsQueue');
       query.sql(
         `CREATE TABLE IF NOT EXISTS "versionsQueue"
            (
@@ -57,7 +51,7 @@ module.exports = function(component, pluginConfig) {
       //INDEX IF NOT EXISTS is only supported from postgres 9.5 
       // but why do we need this index?
       //CREATE UNIQUE INDEX IF NOT EXISTS versionsQueue_key_uindex ON "versionsQueue" (key);`)
-      await pgExec(db, query)
+      await db.query(query);
 
       require('./versionsQueue').init(pluginConfig, sriConfig, db);
 
