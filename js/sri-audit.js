@@ -42,16 +42,16 @@ module.exports = function(component, pluginConfig) {
   return {
     install: async function(sriConfig, db) {
 
-      query.sql(
+      const create = 
         `CREATE TABLE IF NOT EXISTS "versionsQueue"
            (
               key UUID PRIMARY KEY,
               document JSONB
-           );`)
+           );`
       //INDEX IF NOT EXISTS is only supported from postgres 9.5 
       // but why do we need this index?
       //CREATE UNIQUE INDEX IF NOT EXISTS versionsQueue_key_uindex ON "versionsQueue" (key);`)
-      await db.query(query);
+      await db.query(create);
 
       require('./versionsQueue').init(pluginConfig, sriConfig, db);
 

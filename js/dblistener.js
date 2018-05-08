@@ -9,7 +9,7 @@ let keyName;
 
 async function onNotification(data) {
     try {
-        console.log('Received Payload:', data.payload);
+        console.debug('[sri-audit] Received version:', data.payload);
         if (data.payload != 'test') {
             let row = await db.one('SELECT * FROM $2~ where $3~ = $1', [data.payload, tableName, keyName])
             await runOnNotif(row);
@@ -33,16 +33,16 @@ function removeListeners(client) {
 }
 
 function onConnectionLost(err, e) {
-    console.log('Connectivity Problem:', err);
+    console.log('[sri-audit] Connectivity Problem:', err);
     connection = null; // prevent use of the broken connection
     removeListeners(e.client);
     reconnect(5000, 20) // retry 20 times, with 5-second intervals
         .then(() => {
-            console.log('Successfully Reconnected');
+            console.log('[sri-audit] Successfully Reconnected');
         })
         .catch(() => {
             // failed after 10 attempts
-            console.log('Connection Lost Permanently');
+            console.log('[sri-audit] Connection Lost Permanently');
             process.exit(); // exiting the process
         });
 }
@@ -59,7 +59,7 @@ function reconnect(delay, maxAttempts) {
                     return setListeners(obj.client);
                 })
                 .catch(error => {
-                    console.log('Error Connecting:', error);
+                    console.log('[sri-audit] Error Connecting:', error);
                     if (--maxAttempts) {
                         reconnect(delay, maxAttempts)
                             .then(resolve)
@@ -94,12 +94,12 @@ function connect(channel, table, key, onError, onNotif, dbobj) {
     db = dbobj;
     reconnect() // = same as reconnect(0, 1)
         .then(obj => {
-            console.log('Successful Initial Connection');
+            console.log('[sri-audit] Successful Initial Connection');
             // obj.done(); - releases the connection
             //sendNotifications();
         })
         .catch(error => {
-            console.log('Failed Initial Connection:', error);
+            console.log('[sri-audit] Failed Initial Connection:', error);
         });
 }
 
