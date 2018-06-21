@@ -1,6 +1,6 @@
 {
   "name": "@kathondvla/sri4node-audit-broadcast",
-  "version": "2.0.0",
+  "version": "2.0.4",
   "description": "A module for sri4node to register sri-audit-broadcast messages.",
   "main": "js/sri-audit.js",
   "author": "Gunther Claes",
