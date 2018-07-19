@@ -30,7 +30,7 @@ const putVersion = async function(document) {
     console.log('[sri-audit] success');
   }
   else {
-    if (body && body.errors && body.errors[0].body.code === 'same.version') {
+    if (body && body.errors && body.errors.length > 0 && body.errors[0].body.code === 'same.version') {
       await db.any('DELETE FROM "versionsQueue" WHERE key = $1', document.key);
       console.log('[sri-audit] version was same version.');
     }
