@@ -3,7 +3,6 @@
  */
 
 const request = require('requestretry');
-// const pMap = require('p-map');
 
 
 const PQueue = require('p-queue');
@@ -30,7 +29,7 @@ const putVersion = async function(document) {
     console.log('[sri-audit] success');
   }
   else {
-    if (body && body.errors && body.errors[0].body.code === 'same.version') {
+    if (body && body.errors && body.errors[0].body && body.errors[0].body.code === 'same.version') {
       await db.any('DELETE FROM "versionsQueue" WHERE key = $1', document.key);
       console.log('[sri-audit] version was same version.');
     }
@@ -42,7 +41,7 @@ const putVersion = async function(document) {
 
 
 async function runJob(jobkey) {
-  //get the latest version of the job before processing it.
+  //get the item from the DB
   let job = await db.one('SELECT * FROM "versionsQueue" WHERE key = $1', jobkey.key);
   //run it
   await putVersion(job.document);
@@ -53,8 +52,6 @@ async function runJob(jobkey) {
 async function runListener() {
   dblistener.connect(
     'versionsQueueinserted',
-    'versionsQueue', //name of table
-    'key', //name of column with ID
     function(err) {
       console.log(err);
     },
@@ -125,40 +122,5 @@ exports = module.exports = {
     runJobsFromDB();
     runListener();
   }
-
-  // function(pluginConfig, sriConfig, db) {
-  //   'use strict';
-  //   let isRunning = false;
-  //   const $u = sriConfig.utils
-
-  //   const check = async function() {
-
-  //     if (!isRunning) {
-  //       console.log('[sri-audit] Start version queue');
-  //       isRunning = true;
-
-  //       try {
-  //         const query = $u.prepareSQL();
-  //         query.sql('SELECT * FROM "versionsQueue"');
-  //         const rows = await pgExec(db, query)
-
-  //         console.log('[sri-audit] found ' + rows.length + ' versions');
-  //         await pMap(rows, row => putVersion(row.document, pluginConfig, sriConfig, db), { concurrency: 1 })
-
-  //         console.log('[sri-audit] Done.');
-  //       }
-  //       catch (err) {
-  //         console.error(err);
-  //         console.error('[sri-audit] failed with error: ' + err);
-  //       }
-  //       isRunning = false;
-  //     }
-  //     else {
-  //       console.log('[sri-audit] Still running. Not starting new.');
-  //     }
-  //   }
-
-  //   setInterval(check, pluginConfig.interval);
-  // }
 
 };

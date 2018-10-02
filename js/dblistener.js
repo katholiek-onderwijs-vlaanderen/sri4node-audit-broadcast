@@ -4,15 +4,12 @@ let connection;
 let channelName;
 let runOnNotif;
 let runOnError;
-let tableName;
-let keyName;
 
 async function onNotification(data) {
     try {
         console.debug('[sri-audit] Received version:', data.payload);
         if (data.payload != 'test') {
-            let row = await db.one('SELECT * FROM $2~ where $3~ = $1', [data.payload, tableName, keyName])
-            await runOnNotif(row);
+            await runOnNotif(data.payload);
         }
     }
     catch (e) {
@@ -73,24 +70,11 @@ function reconnect(delay, maxAttempts) {
     });
 }
 
-// function sendNotifications() {
-
-//     if (connection) {
-//         connection.none('NOTIFY $1~, $2', [channelName, 'test'])
-//             .catch(error => {
-//                 console.log('Failed to Notify:', error); // unlikely to ever happen
-//             })
-//     }
-
-// }
-
-function connect(channel, table, key, onError, onNotif, dbobj) {
+function connect(channel, onError, onNotif, dbobj) {
 
     channelName = channel;
     runOnError = onError;
     runOnNotif = onNotif;
-    tableName = table;
-    keyName = key;
     db = dbobj;
     reconnect() // = same as reconnect(0, 1)
         .then(obj => {
