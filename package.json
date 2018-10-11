@@ -1,6 +1,6 @@
 {
   "name": "@kathondvla/sri4node-audit-broadcast",
-  "version": "2.0.7",
+  "version": "2.0.8",
   "description": "A module for sri4node to register sri-audit-broadcast messages.",
   "main": "js/sri-audit.js",
   "author": "Gunther Claes",
@@ -12,7 +12,9 @@
     "q": "^1.5.1",
     "qlimit": "^0.1.1",
     "request": "^2.83.0",
-    "uuid": "^3.3.2"
+    "requestretry": "1.13.0",
+    "uuid": "^3.3.2",
+    "deep-object-diff": "1.1.0"
   },
   "devDependencies": {},
   "repository": {
