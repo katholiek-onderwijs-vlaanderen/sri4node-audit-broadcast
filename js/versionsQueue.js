@@ -1,7 +1,3 @@
-/**
- * Created by guntherclaes on 24/10/17.
- */
-
 const request = require('requestretry');
 
 
@@ -42,7 +38,7 @@ const putVersion = async function(document) {
 
 async function runJob(jobkey) {
   //get the item from the DB
-  let job = await db.one('SELECT * FROM "versionsQueue" WHERE key = $1', jobkey.key);
+  let job = await db.one('SELECT * FROM "versionsQueue" WHERE key = $1', jobkey);
   //run it
   await putVersion(job.document);
 }
@@ -71,7 +67,7 @@ async function runJobsFromDB() {
   console.log('[sri-audit] found ' + jobsToRun.length + ' versions on startup');
   for (let job of jobsToRun) {
     queue.add(async function() {
-      await runJob(job);
+      await runJob(job.key);
     });
   }
 }
