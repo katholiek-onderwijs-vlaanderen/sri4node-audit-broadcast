@@ -6,7 +6,7 @@ const queue = new PQueue({ concurrency: 2 });
 let pluginConfig, sriConfig, db;
 const dblistener = require('./dblistener.js');
 
-const putVersion = async function(document) {
+const putVersion = async function (document) {
   'use strict';
 
   const req = {
@@ -23,13 +23,11 @@ const putVersion = async function(document) {
   if (resp.statusCode === 201) {
     await db.any('DELETE FROM "versionsQueue" WHERE key = $1', document.key);
     console.log('[sri-audit] success');
-  }
-  else {
+  } else {
     if (body && body.errors && body.errors[0].body && body.errors[0].body.code === 'same.version') {
       await db.any('DELETE FROM "versionsQueue" WHERE key = $1', document.key);
       console.log('[sri-audit] version was same version.');
-    }
-    else {
+    } else {
       console.warn('[sri-audit] failed with status code: ' + resp.statusCode);
     }
   }
@@ -37,10 +35,14 @@ const putVersion = async function(document) {
 
 
 async function runJob(jobkey) {
-  //get the item from the DB
-  let job = await db.one('SELECT * FROM "versionsQueue" WHERE key = $1', jobkey);
-  //run it
-  await putVersion(job.document);
+  try {
+    //get the item from the DB
+    let job = await db.one('SELECT * FROM "versionsQueue" WHERE key = $1', jobkey);
+    //run it
+    await putVersion(job.document);
+  } catch (ex) {
+    console.warn('[sri-audit] failed to handle ' + jobkey + " error: " + ex.message);
+  }
 }
 
 
@@ -48,12 +50,12 @@ async function runJob(jobkey) {
 async function runListener() {
   dblistener.connect(
     'versionsQueueinserted',
-    function(err) {
+    function (err) {
       console.log(err);
     },
-    async function(job) {
+    async function (job) {
       if (job != 'test') {
-        queue.add(async function() {
+        queue.add(async function () {
           await runJob(job);
         });
       }
@@ -66,7 +68,7 @@ async function runJobsFromDB() {
   const jobsToRun = await db.any('SELECT key FROM "versionsQueue"');
   console.log('[sri-audit] found ' + jobsToRun.length + ' versions on startup');
   for (let job of jobsToRun) {
-    queue.add(async function() {
+    queue.add(async function () {
       await runJob(job.key);
     });
   }
@@ -107,7 +109,7 @@ async function installTriggers() {
 
 exports = module.exports = {
 
-  init: async function(plugConf, sriConf, d) {
+  init: async function (plugConf, sriConf, d) {
     //make these vars available.
     pluginConfig = plugConf;
     sriConfig = sriConf;
