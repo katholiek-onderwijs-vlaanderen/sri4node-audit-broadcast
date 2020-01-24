@@ -16,8 +16,12 @@ const putVersion = async function (document) {
     headers: pluginConfig.headers,
     auth: pluginConfig.auth
   };
-
-  const resp = await request(req)
+  
+  try {
+    const resp = await request(req)
+  } catch (error) {
+    console.error('Could not connect to the /versions Api!', error)
+  }
   const body = resp.body
 
   if (resp.statusCode === 201) {
