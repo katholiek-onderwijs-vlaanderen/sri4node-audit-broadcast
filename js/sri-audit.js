@@ -5,26 +5,33 @@
 const pMap = require('p-map');
 const uuid = require('uuid/v4');
 
-const doAudit = async function(tx, sriRequest, elements, component, operation, mapping) {
+const doAudit = async function(tx, pluginConfig, sriRequest, elements, component, operation, mapping) {
   'use strict';
 
   await pMap(elements, async({ permalink, incoming: object, stored: stored }) => {
 
     //TODO: don't use own regex -> put one in sri4node in utils
-    const type = permalink.match(/^\/(\/*.*)\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/);
+    const typeString = permalink.match(/^\/(\/*.*)\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/);
+    const type = typeString[1].split('/').join('_').toUpperCase();
+    const doc = object;
+    if (pluginConfig.ignore && pluginConfig.ignore[type]) {
+      pluginConfig.ignore[type].forEach(property => {
+        delete doc[property];
+      });
+    }
     const auditItem = {
       key: uuid(),
       person: sriRequest.userObject ? '/persons/' + sriRequest.userObject.uuid : '',
       timestamp: (new Date()).toJSON(),
       component: component,
       operation: operation,
-      type: type[1].split('/').join('_').toUpperCase(),
+      type: type,
       resource: permalink,
       document: object
     };
 
     try {
-      await tx.any('INSERT INTO "versionsQueue" VALUES ($1, $2)', [auditItem.key, auditItem]);
+      await tx.any('INSERT INTO "versionsQueueTEST" VALUES ($1, $2)', [auditItem.key, auditItem]);
     }
     catch (reason) {
       console.error('[sri-audit] put version to database failed for resource: ' + element.path);
@@ -54,9 +61,9 @@ module.exports = function(component, pluginConfig) {
 
       sriConfig.resources.forEach(resource => {
         // audit functions should be LAST function in handler lists
-        resource.afterInsert.push((tx, sriRequest, elements) => doAudit(tx, sriRequest, elements, component, 'CREATE', resource))
-        resource.afterUpdate.push((tx, sriRequest, elements) => doAudit(tx, sriRequest, elements, component, 'UPDATE', resource))
-        resource.afterDelete.push((tx, sriRequest, elements) => doAudit(tx, sriRequest, elements, component, 'DELETE', resource))
+        resource.afterInsert.push((tx, sriRequest, elements) => doAudit(tx, pluginConfig, sriRequest, elements, component, 'CREATE', resource))
+        resource.afterUpdate.push((tx, sriRequest, elements) => doAudit(tx, pluginConfig, sriRequest, elements, component, 'UPDATE', resource))
+        resource.afterDelete.push((tx, sriRequest, elements) => doAudit(tx, pluginConfig, sriRequest, elements, component, 'DELETE', resource))
       })
     }
   }
