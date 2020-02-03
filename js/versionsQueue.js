@@ -8,7 +8,7 @@ const dblistener = require('./dblistener.js');
 
 const putVersion = async function (document) {
   'use strict';
-
+  
   const req = {
     url: pluginConfig.versionApiBase + '/versions/' + document.key,
     method: 'PUT',
@@ -18,22 +18,23 @@ const putVersion = async function (document) {
   };
   
   try {
-    const resp = await request(req)
-  } catch (error) {
-    console.error('Could not connect to the /versions Api!', error)
-  }
-  const body = resp.body
-
-  if (resp.statusCode === 201) {
-    await db.any('DELETE FROM "versionsQueue" WHERE key = $1', document.key);
-    console.log('[sri-audit] success');
-  } else {
-    if (body && body.errors && body.errors[0].body && body.errors[0].body.code === 'same.version') {
+    const resp = await request(req);
+    
+    const body = resp.body;
+    if (resp.statusCode === 201) {
       await db.any('DELETE FROM "versionsQueue" WHERE key = $1', document.key);
-      console.log('[sri-audit] version was same version.');
+      console.log('[sri-audit] success');
     } else {
-      console.warn('[sri-audit] failed with status code: ' + resp.statusCode);
+      if (body && body.errors && body.errors[0].body && body.errors[0].body.code === 'same.version') {
+        await db.any('DELETE FROM "versionsQueue" WHERE key = $1', document.key);
+        console.log('[sri-audit] version was same version.');
+      } else {
+        console.warn('[sri-audit] failed with status code: ' + resp.statusCode);
+      }
     }
+  } catch (error) {
+    console.error('Could not connect to the /versions Api! Make sure the versions queue does not get stuck!', error);
+    return;
   }
 };
 

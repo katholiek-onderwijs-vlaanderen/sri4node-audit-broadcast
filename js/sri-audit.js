@@ -14,8 +14,8 @@ const doAudit = async function(tx, pluginConfig, sriRequest, elements, component
     const typeString = permalink.match(/^\/(\/*.*)\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/);
     const type = typeString[1].split('/').join('_').toUpperCase();
     const doc = object;
-    if (pluginConfig.ignore && pluginConfig.ignore[type]) {
-      pluginConfig.ignore[type].forEach(property => {
+    if (pluginConfig.omitProperties && pluginConfig.omitProperties[type]) {
+      pluginConfig.omitProperties[type].forEach(property => {
         delete doc[property];
       });
     }
@@ -31,13 +31,13 @@ const doAudit = async function(tx, pluginConfig, sriRequest, elements, component
     };
 
     try {
-      await tx.any('INSERT INTO "versionsQueueTEST" VALUES ($1, $2)', [auditItem.key, auditItem]);
+      await tx.any('INSERT INTO "versionsQueue" VALUES ($1, $2)', [auditItem.key, auditItem]);
     }
     catch (reason) {
-      console.error('[sri-audit] put version to database failed for resource: ' + element.path);
-      throw new SriError({ status: 500, errors: [{ code: 'version.queue.insert.failed', msg: 'Storage of new version in versionsQueue failed.' }] })
+      console.error('[sri-audit] put version to database failed for resource: ' + permalink);
+      throw new sriRequest.SriError({ status: 500, errors: [{ code: 'version.queue.insert.failed', msg: 'Storage of new version in versionsQueue failed.' }] });
     }
-  }, { concurrency: 1 })
+  }, { concurrency: 1 });
 };
 
 module.exports = function(component, pluginConfig) {
@@ -51,7 +51,7 @@ module.exports = function(component, pluginConfig) {
            (
               key UUID PRIMARY KEY,
               document JSONB
-           );`
+           );`;
       //INDEX IF NOT EXISTS is only supported from postgres 9.5
       // but why do we need this index?
       //CREATE UNIQUE INDEX IF NOT EXISTS versionsQueue_key_uindex ON "versionsQueue" (key);`)
@@ -61,11 +61,11 @@ module.exports = function(component, pluginConfig) {
 
       sriConfig.resources.forEach(resource => {
         // audit functions should be LAST function in handler lists
-        resource.afterInsert.push((tx, sriRequest, elements) => doAudit(tx, pluginConfig, sriRequest, elements, component, 'CREATE', resource))
-        resource.afterUpdate.push((tx, sriRequest, elements) => doAudit(tx, pluginConfig, sriRequest, elements, component, 'UPDATE', resource))
-        resource.afterDelete.push((tx, sriRequest, elements) => doAudit(tx, pluginConfig, sriRequest, elements, component, 'DELETE', resource))
-      })
+        resource.afterInsert.push((tx, sriRequest, elements) => doAudit(tx, pluginConfig, sriRequest, elements, component, 'CREATE', resource));
+        resource.afterUpdate.push((tx, sriRequest, elements) => doAudit(tx, pluginConfig, sriRequest, elements, component, 'UPDATE', resource));
+        resource.afterDelete.push((tx, sriRequest, elements) => doAudit(tx, pluginConfig, sriRequest, elements, component, 'DELETE', resource));
+      });
     }
-  }
+  };
 
 };

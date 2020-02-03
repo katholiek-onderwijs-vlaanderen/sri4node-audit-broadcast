@@ -11,6 +11,11 @@
 ###Timer
 Initialize the sri4node-audit-broadcast module
 
+###omitProperties
+If some properties are not part of the document 
+(they should have been $$properties but can not be changed for backwards compatibility), 
+they can be omitted with the omitProperties
+
 ```javascript
 var audit = require('sri4node-audit-broadcast');
 audit.init(pg, {
@@ -23,6 +28,9 @@ audit.init(pg, {
     auth: {
       user: "username",
       pass: "password"
+    },
+    omitProperties: {
+      {RESOURCE-TYPE}: [...{array of properties}]
     }
   }
 });
