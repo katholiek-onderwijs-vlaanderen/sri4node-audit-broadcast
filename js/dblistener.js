@@ -1,3 +1,5 @@
+const { debug, error } = require('sri4node/js/common.js')
+
 let db;
 
 let connection;
@@ -7,7 +9,7 @@ let runOnError;
 
 async function onNotification(data) {
     try {
-        console.debug('[sri-audit] Received version:', data.payload);
+        debug('sri-audit', 'Received version:', data.payload);
         if (data.payload != 'test') {
             await runOnNotif(data.payload);
         }
@@ -21,7 +23,7 @@ function setListeners(client) {
     client.on('notification', onNotification);
     return connection.none('LISTEN $1~', channelName)
         .catch(error => {
-            console.log(error); // unlikely to ever happen
+            error(error); // unlikely to ever happen
         });
 }
 
@@ -30,16 +32,16 @@ function removeListeners(client) {
 }
 
 function onConnectionLost(err, e) {
-    console.log('[sri-audit] Connectivity Problem:', err);
+    debug('sri-audit', 'Connectivity Problem:', err);
     connection = null; // prevent use of the broken connection
     removeListeners(e.client);
     reconnect(5000, 20) // retry 20 times, with 5-second intervals
         .then(() => {
-            console.log('[sri-audit] Successfully Reconnected');
+            debug('sri-audit', 'Successfully Reconnected');
         })
         .catch(() => {
             // failed after 10 attempts
-            console.log('[sri-audit] Connection Lost Permanently');
+            error('[sri-audit] Connection Lost Permanently');
             process.exit(); // exiting the process
         });
 }
@@ -56,7 +58,7 @@ function reconnect(delay, maxAttempts) {
                     return setListeners(obj.client);
                 })
                 .catch(error => {
-                    console.log('[sri-audit] Error Connecting:', error);
+                    debug('[sri-audit] Error Connecting:', error);
                     if (--maxAttempts) {
                         reconnect(delay, maxAttempts)
                             .then(resolve)
@@ -78,12 +80,12 @@ function connect(channel, onError, onNotif, dbobj) {
     db = dbobj;
     reconnect() // = same as reconnect(0, 1)
         .then(obj => {
-            console.log('[sri-audit] Successful Initial Connection');
+            debug('sri-audit', 'Successful Initial Connection');
             // obj.done(); - releases the connection
             //sendNotifications();
         })
         .catch(error => {
-            console.log('[sri-audit] Failed Initial Connection:', error);
+            error('[sri-audit] Failed Initial Connection:', error);
         });
 }
 

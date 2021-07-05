@@ -1,5 +1,6 @@
 const request = require('requestretry');
 
+const { debug, error } = require('sri4node/js/common.js')
 
 const PQueue = require('p-queue');
 const queue = new PQueue({ concurrency: 2 });
@@ -23,17 +24,17 @@ const putVersion = async function (document) {
     const body = resp.body;
     if (resp.statusCode === 201) {
       await db.any('DELETE FROM "versionsQueue" WHERE key = $1', document.key);
-      console.log('[sri-audit] success');
+      debug('sri-audit', 'success');
     } else {
-      if (body && body.errors && body.errors[0].body && body.errors[0].body.code === 'same.version') {
+      if (body && body.errors && (body.errors.length > 0) && body.errors[0].body && body.errors[0].body.code === 'same.version') {
         await db.any('DELETE FROM "versionsQueue" WHERE key = $1', document.key);
-        console.log('[sri-audit] version was same version.');
+        debug('sri-audit', 'version was same version.');
       } else {
-        console.warn('[sri-audit] failed with status code: ' + resp.statusCode);
+        error('[sri-audit] failed with status code: ' + resp.statusCode);
       }
     }
   } catch (error) {
-    console.error('Could not connect to the /versions Api! Make sure the versions queue does not get stuck!', error);
+    error('Could not connect to the /versions Api! Make sure the versions queue does not get stuck!', error);
     return;
   }
 };
@@ -46,7 +47,7 @@ async function runJob(jobkey) {
     //run it
     await putVersion(job.document);
   } catch (ex) {
-    console.warn('[sri-audit] failed to handle ' + jobkey + " error: " + ex.message);
+    error('[sri-audit] failed to handle ' + jobkey + " error: " + ex.message);
   }
 }
 
@@ -56,7 +57,7 @@ async function runListener() {
   dblistener.connect(
     'versionsQueueinserted',
     function (err) {
-      console.log(err);
+      debug(err);
     },
     async function (job) {
       if (job != 'test') {
@@ -71,7 +72,7 @@ async function runListener() {
 
 async function runJobsFromDB() {
   const jobsToRun = await db.any('SELECT key FROM "versionsQueue"');
-  console.log('[sri-audit] found ' + jobsToRun.length + ' versions on startup');
+  debug('sri-audit', 'found ' + jobsToRun.length + ' versions on startup');
   for (let job of jobsToRun) {
     queue.add(async function () {
       await runJob(job.key);
@@ -120,7 +121,7 @@ exports = module.exports = {
     sriConfig = sriConf;
     db = d;
 
-    console.log('[sri-audit] Start version queue');
+    debug('sri-audit', 'Start version queue');
     await installTriggers();
     runJobsFromDB();
     runListener();
