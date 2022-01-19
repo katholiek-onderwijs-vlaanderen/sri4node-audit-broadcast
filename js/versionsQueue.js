@@ -1,25 +1,22 @@
 const request = require('requestretry');
 
-
 const PQueue = require('p-queue');
 const queue = new PQueue({ concurrency: 2 });
 let pluginConfig, sriConfig, db;
 const dblistener = require('./dblistener.js');
 
 const putVersion = async function (document) {
-  'use strict';
-  
   const req = {
-    url: pluginConfig.versionApiBase + '/versions/' + document.key,
+    url: `${pluginConfig.versionApiBase}/versions/${document.key}`,
     method: 'PUT',
     json: document,
     headers: pluginConfig.headers,
-    auth: pluginConfig.auth
+    auth: pluginConfig.auth,
   };
-  
+
   try {
     const resp = await request(req);
-    
+
     const body = resp.body;
     if (resp.statusCode === 201) {
       await db.any('DELETE FROM "versionsQueue" WHERE key = $1', document.key);
