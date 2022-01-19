@@ -9,8 +9,7 @@
     "p-map": "1.2.0",
     "p-queue": "2.4.2",
     "requestretry": "1.13.0",
-    "uuid": "^3.3.2",
-    "deep-object-diff": "1.1.0"
+    "uuid": "^3.4.0"
   },
   "devDependencies": {},
   "repository": {
