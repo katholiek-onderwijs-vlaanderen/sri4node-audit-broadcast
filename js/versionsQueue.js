@@ -21,7 +21,7 @@ const putVersion = async function (document) {
     const resp = await request(req);
     
     const body = resp.body;
-    if (resp.statusCode === 201) {
+    if (resp.statusCode === 201 || resp.statusCode === 200) {
       await db.any('DELETE FROM "versionsQueue" WHERE key = $1', document.key);
       console.log('[sri-audit] success');
     } else {
