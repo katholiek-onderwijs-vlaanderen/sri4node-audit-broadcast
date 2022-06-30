@@ -21,7 +21,7 @@ async function putVersion(document) {
     const resp = await request(req);
 
     const { body } = resp;
-    if (resp.statusCode === 201) {
+    if (resp.statusCode === 201 || resp.statusCode === 200) {
       await db.any('DELETE FROM "versionsQueue" WHERE key = $1', document.key);
       console.log('[sri-audit] success');
     } else if (body && body.errors && (body.errors.length > 0) && body.errors[0].body && body.errors[0].body.code === 'same.version') {
