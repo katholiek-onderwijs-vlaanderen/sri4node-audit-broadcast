@@ -2,7 +2,7 @@ const request = require('requestretry');
 const PQueue = require('p-queue');
 
 const queue = new PQueue({ concurrency: 2 });
-const dblistener = require('./dblistener.js');
+const dblistener = require('./dblistener');
 
 let pluginConfig;
 // let sriConfig;

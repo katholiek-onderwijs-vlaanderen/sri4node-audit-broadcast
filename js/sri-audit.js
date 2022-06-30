@@ -58,8 +58,7 @@ const doAudit = async function (tx, pluginConfig, sriRequest, elements, operatio
 // };
 
 module.exports = {
-  install: async (sriConfig, db) => {
-    const pluginConfig = sriConfig.composedAuditPluginConfig;
+  install: async (pluginConfig, sriConfig, db, sri4node) => {
     const create = `CREATE TABLE IF NOT EXISTS "versionsQueue"
       (
         key UUID PRIMARY KEY,
