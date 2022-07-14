@@ -28,7 +28,12 @@ async function putVersion(document) {
       await db.any('DELETE FROM "versionsQueue" WHERE key = $1', document.key);
       console.log('[sri-audit] version was same version.');
     } else {
-      console.warn(`[sri-audit] failed with status code: ${resp.statusCode}`);
+      if (body && body.errors && body.errors[0].body && body.errors[0].body.code === 'same.version') {
+        await db.any('DELETE FROM "versionsQueue" WHERE key = $1', document.key);
+        console.log('[sri-audit] version was same version.');
+      } else {
+        console.warn(`[sri-audit] putting doc with key ${document.key} failed with status code: ${resp.statusCode}`, body && body.errors ? JSON.stringify(body.errors, null, 2) : '');
+      }
     }
   } catch (error) {
     console.error('Could not connect to the /versions Api! Make sure the versions queue does not get stuck!', error);
