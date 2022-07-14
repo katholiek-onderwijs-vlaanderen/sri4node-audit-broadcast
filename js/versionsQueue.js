@@ -29,7 +29,7 @@ const putVersion = async function (document) {
         await db.any('DELETE FROM "versionsQueue" WHERE key = $1', document.key);
         console.log('[sri-audit] version was same version.');
       } else {
-        console.warn('[sri-audit] failed with status code: ' + resp.statusCode);
+        console.warn(`[sri-audit] putting doc with key ${document.key} failed with status code: ${resp.statusCode}`, body && body.errors ? JSON.stringify(body.errors, null, 2) : '');
       }
     }
   } catch (error) {
