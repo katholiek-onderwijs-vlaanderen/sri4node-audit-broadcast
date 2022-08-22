@@ -51,7 +51,7 @@ const doAudit = async function(tx, pluginConfig, sriRequest, elements, component
       await tx.any('INSERT INTO "versionsQueue" VALUES ($1, $2)', [auditItem.key, auditItem]);
     }
     catch (reason) {
-      sri4node.error('[sri-audit] put version to database failed for resource: ' + permalink);
+      sri4node.error(`[sri-audit] doAudit(...): put version to database failed for resource: ${permalink} with error ${reason}`);
       throw new sriRequest.SriError({ status: 500, errors: [{ code: 'version.queue.insert.failed', msg: 'Storage of new version in versionsQueue failed.' }] });
     }
   }, { concurrency: 1 });
