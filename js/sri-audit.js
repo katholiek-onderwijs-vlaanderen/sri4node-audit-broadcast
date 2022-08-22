@@ -68,7 +68,7 @@ module.exports = function(pluginConfig, sri4node) {
       //CREATE UNIQUE INDEX IF NOT EXISTS versionsQueue_key_uindex ON "versionsQueue" (key);`)
       await db.query(create);
 
-      require('./versionsQueue').init(pluginConfig, sriConfig, db);
+      require('./versionsQueue').init(pluginConfig, sriConfig, db, sri4node);
 
       sriConfig.resources.forEach(resource => {
         // audit functions should be LAST function in handler lists
