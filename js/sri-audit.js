@@ -11,6 +11,17 @@ const uuid = require('uuid/v4');
  * @typedef {import('sri4node').TPluginConfig} TPluginConfig
  */
 
+/**
+ * 
+ * @param {*} tx 
+ * @param {*} pluginConfig 
+ * @param {*} sriRequest 
+ * @param {*} elements 
+ * @param {*} component 
+ * @param {*} operation 
+ * @param {*} mapping 
+ * @param {TSri4Node} sri4node 
+ */
 const doAudit = async function(tx, pluginConfig, sriRequest, elements, component, operation, mapping, sri4node) {
   'use strict';
 
@@ -72,9 +83,9 @@ module.exports = function(pluginConfig, sri4node) {
 
       sriConfig.resources.forEach(resource => {
         // audit functions should be LAST function in handler lists
-        resource.afterInsert.push((tx, sriRequest, elements) => doAudit(tx, pluginConfig, sriRequest, elements, component, 'CREATE', resource));
-        resource.afterUpdate.push((tx, sriRequest, elements) => doAudit(tx, pluginConfig, sriRequest, elements, component, 'UPDATE', resource));
-        resource.afterDelete.push((tx, sriRequest, elements) => doAudit(tx, pluginConfig, sriRequest, elements, component, 'DELETE', resource));
+        resource.afterInsert.push((tx, sriRequest, elements) => doAudit(tx, pluginConfig, sriRequest, elements, component, 'CREATE', resource, sri4node));
+        resource.afterUpdate.push((tx, sriRequest, elements) => doAudit(tx, pluginConfig, sriRequest, elements, component, 'UPDATE', resource, sri4node));
+        resource.afterDelete.push((tx, sriRequest, elements) => doAudit(tx, pluginConfig, sriRequest, elements, component, 'DELETE', resource, sri4node));
       });
     }
   };
