@@ -1,13 +1,24 @@
+/**
+ * @typedef {import('sri4node')} TSri4Node
+ * @typedef {import('sri4node').TSriConfig} TSriConfig
+ * @typedef {import('sri4node').TPluginConfig} TPluginConfig
+ */
+
 let db;
 
 let connection;
 let channelName;
 let runOnNotif;
 let runOnError;
+/** @type {TSri4Node} */
+let sri4node;
+
+
+
 
 async function onNotification(data) {
     try {
-        console.debug('[sri-audit] Received version:', data.payload);
+        sri4node.debug('sri-audit', `[onNotification] Received version: ${data.payload}`);
         if (data.payload != 'test') {
             await runOnNotif(data.payload);
         }
@@ -21,7 +32,7 @@ function setListeners(client) {
     client.on('notification', onNotification);
     return connection.none('LISTEN $1~', channelName)
         .catch(error => {
-            console.log(error); // unlikely to ever happen
+            sri4node.error(error); // unlikely to ever happen
         });
 }
 
@@ -30,16 +41,16 @@ function removeListeners(client) {
 }
 
 function onConnectionLost(err, e) {
-    console.log('[sri-audit] Connectivity Problem:', err);
+    sri4node.debug('sri-audit', `[onConnectionLost] Connectivity Problem: ${err}`);
     connection = null; // prevent use of the broken connection
     removeListeners(e.client);
     reconnect(5000, 20) // retry 20 times, with 5-second intervals
         .then(() => {
-            console.log('[sri-audit] Successfully Reconnected');
+            sri4node.debug('sri-audit', '[onConnectionLost] Successfully Reconnected');
         })
         .catch(() => {
             // failed after 10 attempts
-            console.log('[sri-audit] Connection Lost Permanently');
+            sri4node.debug('sri-audit', '[onConnectionLost] Connection Lost Permanently, shutting down...');
             process.exit(); // exiting the process
         });
 }
@@ -56,7 +67,7 @@ function reconnect(delay, maxAttempts) {
                     return setListeners(obj.client);
                 })
                 .catch(error => {
-                    console.log('[sri-audit] Error Connecting:', error);
+                    sri4node.debug('sri-audit', `[reconnect] Error Connecting: ${error}`);
                     if (--maxAttempts) {
                         reconnect(delay, maxAttempts)
                             .then(resolve)
@@ -70,24 +81,33 @@ function reconnect(delay, maxAttempts) {
     });
 }
 
-function connect(channel, onError, onNotif, dbobj) {
 
+/**
+ * 
+ * @param {*} channel 
+ * @param {*} onError 
+ * @param {*} onNotif 
+ * @param {*} dbObj 
+ * @param {TSri4Node} pSri4node 
+ */
+function connect(channel, onError, onNotif, dbObj, pSri4node) {
+    sri4node = pSri4node;
     channelName = channel;
     runOnError = onError;
     runOnNotif = onNotif;
-    db = dbobj;
+    db = dbObj;
     reconnect() // = same as reconnect(0, 1)
         .then(obj => {
-            console.log('[sri-audit] Successful Initial Connection');
+            pSri4node.debug('sri-audit', '[connect] Successful Initial Connection');
             // obj.done(); - releases the connection
             //sendNotifications();
         })
         .catch(error => {
-            console.log('[sri-audit] Failed Initial Connection:', error);
+            pSri4node.debug('sri-audit', `[connect] Failed Initial Connection:${error}`);
         });
 }
 
 
 module.exports = {
-    connect: connect
+    connect
 }

@@ -5,7 +5,13 @@
 const pMap = require('p-map');
 const uuid = require('uuid/v4');
 
-const doAudit = async function(tx, pluginConfig, sriRequest, elements, component, operation, mapping) {
+/**
+ * @typedef {import('sri4node')} TSri4Node
+ * @typedef {import('sri4node').TSriConfig} TSriConfig
+ * @typedef {import('sri4node').TPluginConfig} TPluginConfig
+ */
+
+const doAudit = async function(tx, pluginConfig, sriRequest, elements, component, operation, mapping, sri4node) {
   'use strict';
 
   await pMap(elements, async({ permalink, incoming: object, stored: stored }) => {
@@ -34,13 +40,18 @@ const doAudit = async function(tx, pluginConfig, sriRequest, elements, component
       await tx.any('INSERT INTO "versionsQueue" VALUES ($1, $2)', [auditItem.key, auditItem]);
     }
     catch (reason) {
-      console.error('[sri-audit] put version to database failed for resource: ' + permalink);
+      sri4node.error('[sri-audit] put version to database failed for resource: ' + permalink);
       throw new sriRequest.SriError({ status: 500, errors: [{ code: 'version.queue.insert.failed', msg: 'Storage of new version in versionsQueue failed.' }] });
     }
   }, { concurrency: 1 });
 };
 
-module.exports = function(component, pluginConfig) {
+module.exports = function(pluginConfig, sri4node) {
+  const { component } = pluginConfig;
+
+  const { SriError, debug, error } = sri4node;
+  // const { typeToMapping, tableFromMapping, urlToTypeAndKey, parseResource } = sri4node.utils;
+
   'use strict';
 
   return {

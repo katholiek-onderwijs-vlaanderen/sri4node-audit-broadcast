@@ -12,7 +12,9 @@
     "uuid": "^3.3.2",
     "deep-object-diff": "1.1.0"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "sri4node": "https://github.com/katholiek-onderwijs-vlaanderen/sri4node.git#v2.3.3"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/katholiek-onderwijs-vlaanderen/sri4node-audit-broadcast"
