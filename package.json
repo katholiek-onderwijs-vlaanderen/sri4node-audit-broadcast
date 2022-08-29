@@ -13,7 +13,7 @@
     "deep-object-diff": "1.1.0"
   },
   "devDependencies": {
-    "sri4node": "https://github.com/katholiek-onderwijs-vlaanderen/sri4node.git#v2.3.3"
+    "sri4node": "https://github.com/katholiek-onderwijs-vlaanderen/sri4node.git#v2.3.4"
   },
   "repository": {
     "type": "git",
