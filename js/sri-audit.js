@@ -3,7 +3,7 @@
  */
 
 const pMap = require('p-map');
-const uuid = require('uuid/v4');
+const { v4: uuid } = require('uuid');
 
 /**
  * @typedef {import('sri4node')} TSri4Node

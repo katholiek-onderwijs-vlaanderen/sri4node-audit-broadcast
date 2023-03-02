@@ -6,14 +6,14 @@
   "author": "Gunther Claes",
   "license": "private",
   "dependencies": {
-    "p-map": "1.2.0",
-    "p-queue": "2.4.2",
-    "requestretry": "1.13.0",
-    "uuid": "^3.3.2",
-    "deep-object-diff": "1.1.0"
+    "fetch-retry": "^5.0.4",
+    "node-fetch": "2.6.9",
+    "p-map": "4.0.0",
+    "p-queue": "4.0.0",
+    "uuid": "9.0.0"
   },
   "devDependencies": {
-    "sri4node": "https://github.com/katholiek-onderwijs-vlaanderen/sri4node.git#v2.3.4"
+    "sri4node": "https://github.com/katholiek-onderwijs-vlaanderen/sri4node.git#v2.3.18"
   },
   "repository": {
     "type": "git",

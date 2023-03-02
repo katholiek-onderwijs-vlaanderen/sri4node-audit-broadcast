@@ -1,4 +1,5 @@
-const request = require('requestretry');
+const originalFetch = require('node-fetch');
+const fetch = require('fetch-retry')(originalFetch);
 
 const PQueue = require('p-queue');
 const queue = new PQueue({ concurrency: 2 });
@@ -10,7 +11,7 @@ const dblistener = require('./dblistener.js');
  * @typedef {import('sri4node').TPluginConfig} TPluginConfig
  */
 
- let pluginConfig, sriConfig, db;
+ let pluginConfig, db;
  /** @type {TSri4Node} */
  let sri4node;
 
@@ -18,20 +19,35 @@ const dblistener = require('./dblistener.js');
 
 const putVersion = async function (document) {
   'use strict';
-  
-  const req = {
-    url: pluginConfig.versionApiBase + '/versions/' + document.key,
-    method: 'PUT',
-    json: document,
-    headers: pluginConfig.headers,
-    auth: pluginConfig.auth
-  };
-  
+
   try {
-    const resp = await request(req);
-    
-    const body = resp.body;
-    if (resp.statusCode === 201 || resp.statusCode === 200) {
+    const resp = await fetch(pluginConfig.versionApiBase + '/versions/' + document.key, {
+      method: 'PUT',
+      body: JSON.stringify(document),
+      headers: {
+        ...pluginConfig.headers,
+        'content-type': 'application/json; charset=utf-8',
+        'Authorization': 'Basic ' + Buffer.from(pluginConfig.auth.user + ":" +  pluginConfig.auth.pass).toString('base64'),
+      },
+
+      // retry options
+      retryDelay: function(attempt, error, response) {
+        return Math.pow(2, attempt) * 500; // 500, 1000, 2000, 4000
+      },
+      retryOn: function(attempt, error, response) {
+        // retry on any network error, or 5xx status codes
+        if (error !== null || response.status >= 500) {
+          console.log(`retrying, attempt number ${attempt + 1}`);
+          return true;
+        }
+      }
+    });
+
+    const body = resp.headers.get('content-type') === 'application/json; charset=utf-8'
+    ? await resp.json()
+    : await resp.text()
+
+    if (resp.status === 201 || resp.status === 200) {
       await db.any('DELETE FROM "versionsQueue" WHERE key = $1', document.key);
       sri4node.debug('sri-audit', '[putVersion] success');
     } else {
@@ -135,7 +151,6 @@ exports = module.exports = {
   init: async function (plugConf, sriConf, d, pSri4node) {
     //make these vars available.
     pluginConfig = plugConf;
-    sriConfig = sriConf;
     db = d;
     sri4node = pSri4node;
 
