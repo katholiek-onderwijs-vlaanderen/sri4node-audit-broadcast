@@ -11,7 +11,7 @@ const doAudit = async function(tx, pluginConfig, sriRequest, elements, component
   await pMap(elements, async({ permalink, incoming: object, stored: stored }) => {
 
     //TODO: don't use own regex -> put one in sri4node in utils
-    const typeString = permalink.match(/^\/(\/*.*)\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/);
+    const typeString = permalink.match(/^\/(\/*.*)\/((?=[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})|[\d])+$/);
     const type = typeString[1].split('/').join('_').toUpperCase();
     const doc = object;
     if (pluginConfig.omitProperties && pluginConfig.omitProperties[type]) {
