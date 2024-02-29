@@ -8,6 +8,8 @@ const dblistener = require('./dblistener.js');
  * @typedef {import('sri4node')} TSri4Node
  * @typedef {import('sri4node').TSriConfig} TSriConfig
  * @typedef {import('sri4node').TPluginConfig} TPluginConfig
+ *
+ * @typedef {import('./sri-audit.d.ts').TSri4NodeAuditBroadcastPluginConfig} TSri4NodeAuditBroadcastPluginConfig
  */
 
  let pluginConfig, sriConfig, db;
@@ -33,13 +35,13 @@ const putVersion = async function (document) {
     const body = resp.body;
     if (resp.statusCode === 201 || resp.statusCode === 200) {
       await db.any('DELETE FROM "versionsQueue" WHERE key = $1', document.key);
-      sri4node.debug('sri-audit', '[putVersion] success');
+      sri4node.debug('sri-audit', `[putVersion] /versions/${document.key} has been put successfully`);
     } else {
       if (body && body.errors && body.errors.some(({code}) => code === 'same.version')) {
         await db.any('DELETE FROM "versionsQueue" WHERE key = $1', document.key);
         sri4node.debug('sri-audit', '[sri-audit] version was same version.');
       } else {
-        sri4node.error(`[putVersion] WARNING: putting doc with key ${document.key} failed with status code: ${resp.statusCode}`, body && body.errors ? JSON.stringify(body.errors, null, 2) : '');
+        sri4node.error(`[putVersion] WARNING: putting /versions/${document.key} (with key ${document.key}) failed with status code: ${resp.statusCode}`, body && body.errors ? JSON.stringify(body.errors, null, 2) : '');
       }
     }
   } catch (error) {
@@ -127,16 +129,16 @@ exports = module.exports = {
 
   /**
    * 
-   * @param {*} plugConf 
-   * @param {TSriConfig} sriConf 
-   * @param {*} d 
+   * @param {TSri4NodeAuditBroadcastPluginConfig} pPluginConfig
+   * @param {TSriConfig} pSriConfig
+   * @param {any} pDb
    * @param {TSri4Node} pSri4node 
    */
-  init: async function (plugConf, sriConf, d, pSri4node) {
+  init: async function (pPluginConfig, pSriConfig, pDb, pSri4node) {
     //make these vars available.
-    pluginConfig = plugConf;
-    sriConfig = sriConf;
-    db = d;
+    pluginConfig = pPluginConfig;
+    sriConfig = pSriConfig;
+    db = pDb;
     sri4node = pSri4node;
 
     sri4node.debug('sri-audit', '[init] Start version queue');

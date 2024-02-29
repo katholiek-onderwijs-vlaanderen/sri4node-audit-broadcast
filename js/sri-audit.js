@@ -9,12 +9,14 @@ const uuid = require('uuid/v4');
  * @typedef {import('sri4node')} TSri4Node
  * @typedef {import('sri4node').TSriConfig} TSriConfig
  * @typedef {import('sri4node').TPluginConfig} TPluginConfig
+ *
+ * @typedef {import('./sri-audit.d.ts').TSri4NodeAuditBroadcastPluginConfig} TSri4NodeAuditBroadcastPluginConfig
  */
 
 /**
  * 
  * @param {*} tx 
- * @param {*} pluginConfig 
+ * @param {TSri4NodeAuditBroadcastPluginConfig} pluginConfig 
  * @param {*} sriRequest 
  * @param {*} elements 
  * @param {*} component 
@@ -57,6 +59,12 @@ const doAudit = async function(tx, pluginConfig, sriRequest, elements, component
   }, { concurrency: 1 });
 };
 
+/**
+ * 
+ * @param {TSri4NodeAuditBroadcastPluginConfig} pluginConfig
+ * @param {*} sri4node 
+ * @returns 
+ */
 module.exports = function(pluginConfig, sri4node) {
   const { component } = pluginConfig;
 
