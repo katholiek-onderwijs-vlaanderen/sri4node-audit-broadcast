@@ -1,26 +1,26 @@
-##Requirements
+# sri4node-audit-broadcast
+
+An sri4node plugin to send updated resources to an audit server.
+
+## Requirements
 * An sri4node api
-* A sri-audit-broadcast server
+* A sri-audit-broadcast server (having a /versions resource where we can store every new version of any resource handled by the current api)
 
 
-##To Start
-* Run the script in your sri4node database
+## Usage
 
-##Usage
-
-###Timer
-Initialize the sri4node-audit-broadcast module
-
-###omitProperties
+### omitProperties
 If some properties are not part of the document 
 (they should have been $$properties but can not be changed for backwards compatibility), 
 they can be omitted with the omitProperties
 
 ```javascript
-var audit = require('sri4node-audit-broadcast');
-audit.init(pg, {
-  timeout: 10000,
-  host: {
+const auditBroadcastSri4NodePluginFactory = require('sri4node-audit-broadcast');
+
+
+const auditBroadcastPlugin = auditBroadcastSri4NodePluginFactory(
+  /** @type {TSri4NodeAuditBroadcastPluginConfig} */
+  {
     baseUrl: configuration.audit.host,
     headers: {
       headerName: "value"
@@ -32,20 +32,25 @@ audit.init(pg, {
     omitProperties: {
       {RESOURCE-TYPE}: [...{array of properties}]
     }
-  }
-});
-```
-
-###After read functions
-Add the after read functions.
+  },
+  sri4node, // the sri4node library instance
+);
 
 
-```javascript
-{
+/** @type {TSriConfig} */
+const sriConfig = {
+  plugins: [
+    auditBroadcastPlugin,
+  ],
+  description:
+    'my api to store Oompa-Loompas and their songs',
+  resources: [
+    require('../resources/oompaloompas.js')(),
+    require('../resources/songs.js')(),
+  ],
+
   ...,
-  afterupdate[audit.update],
-  afterinsert[audit.create],
-  afterdelete[audit.delete],
-  ...
-}
+};
+
+// and then instantiate the sri4node server with this configuration
 ```
