@@ -3,17 +3,24 @@
   "version": "2.0.10",
   "description": "A module for sri4node to register sri-audit-broadcast messages.",
   "main": "js/sri-audit.js",
-  "author": "Gunther Claes",
+  "author": "Katholiek Onderwijs Vlaanderen",
   "license": "private",
+  "scripts": {
+    "test": "docker compose -f test/docker/docker-compose.yml down --remove-orphans --rmi=local && docker compose -f test/docker/docker-compose.yml up --wait postgres && docker compose -f test/docker/docker-compose.yml logs && mocha"
+  },
   "dependencies": {
-    "fetch-retry": "^5.0.4",
-    "node-fetch": "2.6.9",
-    "p-map": "4.0.0",
-    "p-queue": "4.0.0",
-    "uuid": "9.0.0"
+    "fetch-retry": "^5.0.6",
+    "node-fetch": "^3.3.2",
+    "p-map": "^4.0.0",
+    "p-queue": "^4.0.0",
+    "uuid": "^9.0.1"
   },
   "devDependencies": {
-    "sri4node": "https://github.com/katholiek-onderwijs-vlaanderen/sri4node.git#v2.3.18"
+    "@types/chai": "^4.3.12",
+    "@types/mocha": "^10.0.6",
+    "chai": "^5.1.0",
+    "mocha": "^10.3.0",
+    "sri4node": "github:katholiek-onderwijs-vlaanderen/sri4node#v2.3.31"
   },
   "repository": {
     "type": "git",

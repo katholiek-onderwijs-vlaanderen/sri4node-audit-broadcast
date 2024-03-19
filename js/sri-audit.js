@@ -9,23 +9,25 @@ const { v4: uuid } = require('uuid');
  * @typedef {import('sri4node')} TSri4Node
  * @typedef {import('sri4node').TSriConfig} TSriConfig
  * @typedef {import('sri4node').TPluginConfig} TPluginConfig
+ *
+ * @typedef {import('./sri-audit.d.ts').TSri4NodeAuditBroadcastPluginConfig} TSri4NodeAuditBroadcastPluginConfig
  */
 
 /**
  * 
- * @param {*} tx 
- * @param {*} pluginConfig 
- * @param {*} sriRequest 
- * @param {*} elements 
- * @param {*} component 
- * @param {*} operation 
- * @param {*} mapping 
+ * @param {any} tx databse transaction from pg-promise
+ * @param {TSri4NodeAuditBroadcastPluginConfig} pluginConfig
+ * @param {import('sri4node').TSriRequest} sriRequest
+ * @param {Array<{ permalink: string; incoming: Record<string, any>; stored: Record<string, any>;}>} elements
+ * @param {string} component
+ * @param {'CREATE' | 'READ' | 'UPDATE' | 'DELETE'} operation
+ * @param {import('sri4node').TResourceDefinition} mapping
  * @param {TSri4Node} sri4node 
  */
 const doAudit = async function(tx, pluginConfig, sriRequest, elements, component, operation, mapping, sri4node) {
   'use strict';
 
-  await pMap(elements, async({ permalink, incoming: object, stored: stored }) => {
+  await pMap(elements, async({ permalink, incoming: object, stored }) => {
 
     //TODO: don't use own regex -> put one in sri4node in utils
     const typeString = permalink.match(/^\/(\/*.*)\/((?:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})|[\d]+)+$/);
@@ -81,7 +83,7 @@ module.exports = function(pluginConfig, sri4node) {
 
       require('./versionsQueue').init(pluginConfig, sriConfig, db, sri4node);
 
-      sriConfig.resources.forEach(resource => {
+      sriConfig.resources.forEach((/** @type {import('sri4node').TResourceDefinition} */ resource) => {
         // audit functions should be LAST function in handler lists
         resource.afterInsert.push((tx, sriRequest, elements) => doAudit(tx, pluginConfig, sriRequest, elements, component, 'CREATE', resource, sri4node));
         resource.afterUpdate.push((tx, sriRequest, elements) => doAudit(tx, pluginConfig, sriRequest, elements, component, 'UPDATE', resource, sri4node));
