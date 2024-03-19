@@ -10,8 +10,9 @@ An sri4node plugin to send updated resources to an audit server.
 ## Usage
 
 ### omitProperties
-If some properties are not part of the document 
-(they should have been $$properties but can not be changed for backwards compatibility), 
+
+If some properties are not part of the document
+(they should have been $$properties but can not be changed for backwards compatibility),
 they can be omitted with the omitProperties
 
 ```javascript

@@ -34,9 +34,11 @@ const doAudit = async function(tx, pluginConfig, sriRequest, elements, component
     const type = typeString[1].split('/').join('_').toUpperCase();
     const doc = object;
     if (pluginConfig.omitProperties && pluginConfig.omitProperties[type]) {
-      pluginConfig.omitProperties[type].forEach(property => {
-        delete doc[property];
-      });
+      pluginConfig.omitProperties[type]
+        .filter((property) => doc.hasOwnProperty(property)) // only if the property exists on this doc !!!
+        .forEach((property) => {
+          delete doc[property];
+        });
     }
     const auditItem = {
       key: uuid(),
