@@ -11,11 +11,9 @@ const dblistener = require('./dblistener.js');
  * @typedef {import('sri4node').TPluginConfig} TPluginConfig
  */
 
- let pluginConfig, db;
- /** @type {TSri4Node} */
- let sri4node;
-
-
+let pluginConfig, db;
+/** @type {TSri4Node} */
+let sri4node;
 
 const putVersion = async function (document) {
   'use strict';
@@ -27,43 +25,51 @@ const putVersion = async function (document) {
       headers: {
         ...pluginConfig.headers,
         'content-type': 'application/json; charset=utf-8',
-        'Authorization': 'Basic ' + Buffer.from(pluginConfig.auth.user + ":" +  pluginConfig.auth.pass).toString('base64'),
+        Authorization:
+          'Basic ' +
+          Buffer.from(pluginConfig.auth.user + ':' + pluginConfig.auth.pass).toString('base64'),
       },
 
       // retry options
-      retryDelay: function(attempt, error, response) {
+      retryDelay: function (attempt, error, response) {
         return Math.pow(2, attempt) * 500; // 500, 1000, 2000, 4000
       },
-      retryOn: function(attempt, error, response) {
+      retryOn: function (attempt, error, response) {
         // retry on any network error, or 5xx status codes
         if (error !== null || response.status >= 500) {
           console.log(`retrying, attempt number ${attempt + 1}`);
           return true;
         }
-      }
+      },
     });
 
-    const body = resp.headers.get('content-type') === 'application/json; charset=utf-8'
-    ? await resp.json()
-    : await resp.text()
+    const body =
+      resp.headers.get('content-type') === 'application/json; charset=utf-8'
+        ? await resp.json()
+        : await resp.text();
 
     if (resp.status === 201 || resp.status === 200) {
       await db.any('DELETE FROM "versionsQueue" WHERE key = $1', document.key);
       sri4node.debug('sri-audit', '[putVersion] success');
     } else {
-      if (body && body.errors && body.errors.some(({code}) => code === 'same.version')) {
+      if (body && body.errors && body.errors.some(({ code }) => code === 'same.version')) {
         await db.any('DELETE FROM "versionsQueue" WHERE key = $1', document.key);
         sri4node.debug('sri-audit', '[sri-audit] version was same version.');
       } else {
-        sri4node.error(`[putVersion] WARNING: putting doc with key ${document.key} failed with status code: ${resp.statusCode}`, body && body.errors ? JSON.stringify(body.errors, null, 2) : '');
+        sri4node.error(
+          `[putVersion] WARNING: putting doc with key ${document.key} failed with status code: ${resp.statusCode}`,
+          body && body.errors ? JSON.stringify(body.errors, null, 2) : '',
+        );
       }
     }
   } catch (error) {
-    sri4node.error('Could not connect to the /versions Api! Make sure the versions queue does not get stuck!', error);
+    sri4node.error(
+      'Could not connect to the /versions Api! Make sure the versions queue does not get stuck!',
+      error,
+    );
     return;
   }
 };
-
 
 async function runJob(jobkey) {
   try {
@@ -72,11 +78,9 @@ async function runJob(jobkey) {
     //run it
     await putVersion(job.document);
   } catch (ex) {
-    sri4node.error('[sri-audit] WARNING: failed to handle ' + jobkey + " error: " + ex.message);
+    sri4node.error('[sri-audit] WARNING: failed to handle ' + jobkey + ' error: ' + ex.message);
   }
 }
-
-
 
 async function runListener() {
   dblistener.connect(
@@ -138,15 +142,13 @@ async function installTriggers() {
   await db.query(plpgsql);
 }
 
-
 exports = module.exports = {
-
   /**
-   * 
-   * @param {*} plugConf 
-   * @param {TSriConfig} sriConf 
-   * @param {*} d 
-   * @param {TSri4Node} pSri4node 
+   *
+   * @param {*} plugConf
+   * @param {TSriConfig} sriConf
+   * @param {*} d
+   * @param {TSri4Node} pSri4node
    */
   init: async function (plugConf, sriConf, d, pSri4node) {
     //make these vars available.
@@ -158,6 +160,5 @@ exports = module.exports = {
     await installTriggers();
     runJobsFromDB();
     runListener();
-  }
-
+  },
 };

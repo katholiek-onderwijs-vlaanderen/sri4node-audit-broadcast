@@ -3,9 +3,9 @@
 An sri4node plugin to send updated resources to an audit server.
 
 ## Requirements
-* An sri4node api
-* A sri-audit-broadcast server (having a /versions resource where we can store every new version of any resource handled by the current api)
 
+- An sri4node api
+- A sri-audit-broadcast server (having a /versions resource where we can store every new version of any resource handled by the current api)
 
 ## Usage
 

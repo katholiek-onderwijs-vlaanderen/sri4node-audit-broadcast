@@ -14,7 +14,7 @@ const { v4: uuid } = require('uuid');
  */
 
 /**
- * 
+ *
  * @param {any} tx databse transaction from pg-promise
  * @param {TSri4NodeAuditBroadcastPluginConfig} pluginConfig
  * @param {import('sri4node').TSriRequest} sriRequest
@@ -22,58 +22,79 @@ const { v4: uuid } = require('uuid');
  * @param {string} component
  * @param {'CREATE' | 'READ' | 'UPDATE' | 'DELETE'} operation
  * @param {import('sri4node').TResourceDefinition} mapping
- * @param {TSri4Node} sri4node 
+ * @param {TSri4Node} sri4node
  */
-const doAudit = async function(tx, pluginConfig, sriRequest, elements, component, operation, mapping, sri4node) {
+const doAudit = async function (
+  tx,
+  pluginConfig,
+  sriRequest,
+  elements,
+  component,
+  operation,
+  mapping,
+  sri4node,
+) {
   'use strict';
 
-  await pMap(elements, async({ permalink, incoming: object, stored }) => {
+  await pMap(
+    elements,
+    async ({ permalink, incoming: object, stored }) => {
+      //TODO: don't use own regex -> put one in sri4node in utils
+      const typeString = permalink.match(
+        /^\/(\/*.*)\/((?:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})|[\d]+)+$/,
+      );
+      const type = typeString[1].split('/').join('_').toUpperCase();
+      const doc = object;
+      if (pluginConfig.omitProperties && pluginConfig.omitProperties[type]) {
+        pluginConfig.omitProperties[type]
+          .filter((property) => doc.hasOwnProperty(property)) // only if the property exists on this doc !!!
+          .forEach((property) => {
+            delete doc[property];
+          });
+      }
+      const auditItem = {
+        key: uuid(),
+        person: sriRequest.userObject ? '/persons/' + sriRequest.userObject.uuid : '',
+        timestamp: new Date().toJSON(),
+        component: component,
+        operation: operation,
+        type: type,
+        resource: permalink,
+        document: object,
+      };
 
-    //TODO: don't use own regex -> put one in sri4node in utils
-    const typeString = permalink.match(/^\/(\/*.*)\/((?:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})|[\d]+)+$/);
-    const type = typeString[1].split('/').join('_').toUpperCase();
-    const doc = object;
-    if (pluginConfig.omitProperties && pluginConfig.omitProperties[type]) {
-      pluginConfig.omitProperties[type]
-        .filter((property) => doc.hasOwnProperty(property)) // only if the property exists on this doc !!!
-        .forEach((property) => {
-          delete doc[property];
+      try {
+        await tx.any('INSERT INTO "versionsQueue" VALUES ($1, $2)', [auditItem.key, auditItem]);
+      } catch (reason) {
+        sri4node.error(
+          `[sri-audit] doAudit(...): put version to database failed for resource: ${permalink} with error ${reason}`,
+        );
+        throw new sriRequest.SriError({
+          status: 500,
+          errors: [
+            {
+              code: 'version.queue.insert.failed',
+              msg: 'Storage of new version in versionsQueue failed.',
+            },
+          ],
         });
-    }
-    const auditItem = {
-      key: uuid(),
-      person: sriRequest.userObject ? '/persons/' + sriRequest.userObject.uuid : '',
-      timestamp: (new Date()).toJSON(),
-      component: component,
-      operation: operation,
-      type: type,
-      resource: permalink,
-      document: object
-    };
-
-    try {
-      await tx.any('INSERT INTO "versionsQueue" VALUES ($1, $2)', [auditItem.key, auditItem]);
-    }
-    catch (reason) {
-      sri4node.error(`[sri-audit] doAudit(...): put version to database failed for resource: ${permalink} with error ${reason}`);
-      throw new sriRequest.SriError({ status: 500, errors: [{ code: 'version.queue.insert.failed', msg: 'Storage of new version in versionsQueue failed.' }] });
-    }
-  }, { concurrency: 1 });
+      }
+    },
+    { concurrency: 1 },
+  );
 };
 
-module.exports = function(pluginConfig, sri4node) {
+module.exports = function (pluginConfig, sri4node) {
   const { component } = pluginConfig;
 
   const { SriError, debug, error } = sri4node;
   // const { typeToMapping, tableFromMapping, urlToTypeAndKey, parseResource } = sri4node.utils;
 
-  'use strict';
+  ('use strict');
 
   return {
-    install: async function(sriConfig, db) {
-
-      const create =
-        `CREATE TABLE IF NOT EXISTS "versionsQueue"
+    install: async function (sriConfig, db) {
+      const create = `CREATE TABLE IF NOT EXISTS "versionsQueue"
            (
               key UUID PRIMARY KEY,
               document JSONB
@@ -85,13 +106,47 @@ module.exports = function(pluginConfig, sri4node) {
 
       require('./versionsQueue').init(pluginConfig, sriConfig, db, sri4node);
 
-      sriConfig.resources.forEach((/** @type {import('sri4node').TResourceDefinition} */ resource) => {
-        // audit functions should be LAST function in handler lists
-        resource.afterInsert.push((tx, sriRequest, elements) => doAudit(tx, pluginConfig, sriRequest, elements, component, 'CREATE', resource, sri4node));
-        resource.afterUpdate.push((tx, sriRequest, elements) => doAudit(tx, pluginConfig, sriRequest, elements, component, 'UPDATE', resource, sri4node));
-        resource.afterDelete.push((tx, sriRequest, elements) => doAudit(tx, pluginConfig, sriRequest, elements, component, 'DELETE', resource, sri4node));
-      });
-    }
+      sriConfig.resources.forEach(
+        (/** @type {import('sri4node').TResourceDefinition} */ resource) => {
+          // audit functions should be LAST function in handler lists
+          resource.afterInsert.push((tx, sriRequest, elements) =>
+            doAudit(
+              tx,
+              pluginConfig,
+              sriRequest,
+              elements,
+              component,
+              'CREATE',
+              resource,
+              sri4node,
+            ),
+          );
+          resource.afterUpdate.push((tx, sriRequest, elements) =>
+            doAudit(
+              tx,
+              pluginConfig,
+              sriRequest,
+              elements,
+              component,
+              'UPDATE',
+              resource,
+              sri4node,
+            ),
+          );
+          resource.afterDelete.push((tx, sriRequest, elements) =>
+            doAudit(
+              tx,
+              pluginConfig,
+              sriRequest,
+              elements,
+              component,
+              'DELETE',
+              resource,
+              sri4node,
+            ),
+          );
+        },
+      );
+    },
   };
-
 };
