@@ -3,18 +3,34 @@
   "version": "2.0.10",
   "description": "A module for sri4node to register sri-audit-broadcast messages.",
   "main": "js/sri-audit.js",
-  "author": "Gunther Claes",
+  "author": "Katholiek Onderwijs Vlaanderen",
   "license": "private",
-  "dependencies": {
-    "p-map": "1.2.0",
-    "p-queue": "2.4.2",
-    "requestretry": "1.13.0",
-    "uuid": "^3.3.2",
-    "deep-object-diff": "1.1.0"
+  "scripts": {
+    "test": "docker compose -f test/docker/docker-compose.yml down --remove-orphans --rmi=local && docker compose -f test/docker/docker-compose.yml up --wait postgres && docker compose -f test/docker/docker-compose.yml logs && mocha",
+    "prepare": "(\n    case \"$(pwd)\" in\n        *\"/node_modules\"*) echo \"Not setting git core.hooksPath (installed as a dependency)\";;\n        *) git config core.hooksPath ./git-hooks && echo \"git core.hooksPath has been set to: $(git config core.hooksPath)\";;\n    esac\n  )\n"
   },
-  "devDependencies": {},
+  "dependencies": {
+    "fetch-retry": "^5.0.6",
+    "node-fetch": "^3.3.2",
+    "p-map": "^4.0.0",
+    "p-queue": "^4.0.0",
+    "uuid": "^9.0.1"
+  },
+  "devDependencies": {
+    "@types/chai": "^4.3.12",
+    "@types/mocha": "^10.0.6",
+    "chai": "^5.1.0",
+    "eslint-config-prettier": "^9.1.0",
+    "lint-staged": "^15.2.2",
+    "mocha": "^10.3.0",
+    "prettier": "^3.2.5",
+    "sri4node": "github:katholiek-onderwijs-vlaanderen/sri4node#v2.3.31"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/katholiek-onderwijs-vlaanderen/sri4node-audit-broadcast"
+  },
+  "lint-staged": {
+    "*.{js,ts,jsx,tsx,json,css,md}": "prettier --write"
   }
 }
