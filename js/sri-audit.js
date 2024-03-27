@@ -1,26 +1,26 @@
-/**
- * Created by guntherclaes on 26/11/15.
- */
-
 const pMap = require('p-map');
 const { v4: uuid } = require('uuid');
+const { cleanupDocument } = require('./utils.js');
+
+const versionsQueue = require('./versionsQueue');
 
 /**
  * @typedef {import('sri4node')} TSri4Node
  * @typedef {import('sri4node').TSriConfig} TSriConfig
  * @typedef {import('sri4node').TPluginConfig} TPluginConfig
  *
- * @typedef {import('./sri-audit.d.ts').TSri4NodeAuditBroadcastPluginConfig} TSri4NodeAuditBroadcastPluginConfig
+ * @typedef {import('./index.d.ts').TSri4NodeAuditBroadcastPluginConfig} TSri4NodeAuditBroadcastPluginConfig
  */
 
 /**
+ * This is the function that will be set as an after (insert/delete/update) hook in sri4node.
  *
- * @param {any} tx databse transaction from pg-promise
+ * @param {any} tx database transaction from pg-promise
  * @param {TSri4NodeAuditBroadcastPluginConfig} pluginConfig
  * @param {import('sri4node').TSriRequest} sriRequest
  * @param {Array<{ permalink: string; incoming: Record<string, any>; stored: Record<string, any>;}>} elements
  * @param {string} component
- * @param {'CREATE' | 'READ' | 'UPDATE' | 'DELETE'} operation
+ * @param {'CREATE' | 'UPDATE' | 'DELETE'} operation
  * @param {import('sri4node').TResourceDefinition} mapping
  * @param {TSri4Node} sri4node
  */
@@ -34,33 +34,21 @@ const doAudit = async function (
   mapping,
   sri4node,
 ) {
-  'use strict';
-
   await pMap(
     elements,
-    async ({ permalink, incoming: object, stored }) => {
-      //TODO: don't use own regex -> put one in sri4node in utils
-      const typeString = permalink.match(
-        /^\/(\/*.*)\/((?:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})|[\d]+)+$/,
-      );
-      const type = typeString[1].split('/').join('_').toUpperCase();
-      const doc = object;
-      if (pluginConfig.omitProperties && pluginConfig.omitProperties[type]) {
-        pluginConfig.omitProperties[type]
-          .filter((property) => doc.hasOwnProperty(property)) // only if the property exists on this doc !!!
-          .forEach((property) => {
-            delete doc[property];
-          });
-      }
+    async ({ permalink, incoming, stored }) => {
+      const type = sri4node.utils.urlToTypeAndKey(permalink).type;
+      const doc = cleanupDocument(pluginConfig?.omitProperties?.[type], incoming);
+      /** @type {import('./index.d.ts').TSriVersionResource} */
       const auditItem = {
         key: uuid(),
         person: sriRequest.userObject ? '/persons/' + sriRequest.userObject.uuid : '',
         timestamp: new Date().toJSON(),
-        component: component,
-        operation: operation,
-        type: type,
+        component,
+        operation,
+        type,
         resource: permalink,
-        document: object,
+        document: doc,
       };
 
       try {
@@ -84,27 +72,45 @@ const doAudit = async function (
   );
 };
 
-module.exports = function (pluginConfig, sri4node) {
+/**
+ * Factory function for the sri4node audit broadcast plugin.
+ *
+ * @param {TSri4NodeAuditBroadcastPluginConfig} pluginConfig
+ * @param {TSri4Node} sri4node
+ * @returns {import('sri4node').TSriConfig['plugins'][0]}
+ */
+function sri4NodeAuditBroadcastPluginFactory(pluginConfig, sri4node) {
   const { component } = pluginConfig;
 
   const { SriError, debug, error } = sri4node;
   // const { typeToMapping, tableFromMapping, urlToTypeAndKey, parseResource } = sri4node.utils;
 
-  ('use strict');
-
   return {
+    uuid: 'f06cab52-eb87-11ee-9a22-00155d328834',
+    /**
+     * @param {TSriConfig} sriConfig
+     * @param {import('pg-promise').IDatabase<any>} db
+     */
     install: async function (sriConfig, db) {
+      const apiPaths = new Set(sriConfig.resources.map(({ type }) => type));
+      if (
+        Object.keys(pluginConfig.omitProperties ?? {}).some(
+          (omitApiPath) => !apiPaths.has(omitApiPath),
+        )
+      ) {
+        console.error(
+          "sri-audit: omitProperties should not contain keys that are not matching the type of any of the api's resources.",
+        );
+      }
+
       const create = `CREATE TABLE IF NOT EXISTS "versionsQueue"
            (
               key UUID PRIMARY KEY,
               document JSONB
            );`;
-      //INDEX IF NOT EXISTS is only supported from postgres 9.5
-      // but why do we need this index?
-      //CREATE UNIQUE INDEX IF NOT EXISTS versionsQueue_key_uindex ON "versionsQueue" (key);`)
       await db.query(create);
 
-      require('./versionsQueue').init(pluginConfig, sriConfig, db, sri4node);
+      versionsQueue.init(pluginConfig, sriConfig, db, sri4node);
 
       sriConfig.resources.forEach(
         (/** @type {import('sri4node').TResourceDefinition} */ resource) => {
@@ -148,5 +154,13 @@ module.exports = function (pluginConfig, sri4node) {
         },
       );
     },
+    close: async () => {
+      versionsQueue.close();
+    },
   };
+}
+
+module.exports = {
+  cleanupDocument, // exposed mainly for unit tests
+  sri4NodeAuditBroadcastPluginFactory,
 };
