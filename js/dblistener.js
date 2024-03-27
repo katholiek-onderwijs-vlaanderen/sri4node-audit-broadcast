@@ -4,8 +4,10 @@
  * @typedef {import('sri4node').TPluginConfig} TPluginConfig
  */
 
+/** @type {import('pg-promise').IDatabase} */
 let db;
 
+/** @type {import('pg-promise').IConnected} */
 let connection;
 let channelName;
 let runOnNotif;
@@ -103,4 +105,10 @@ function connect(channel, onError, onNotif, dbObj, pSri4node) {
 
 module.exports = {
   connect,
+  close: () => {
+    if (connection) {
+      removeListeners(connection.client);
+      connection.done();
+    }
+  },
 };
