@@ -361,11 +361,11 @@ function runTests(pluginModule, moduleType) {
         }
 
         // necessary as long as sri4node does not implement the mechanism for calling close on every plugin automatically
-        try {
-          plugin.close();
-        } catch (e) {
-          console.error('Error while closing plugin:', e);
-        }
+        // try {
+        //   plugin.close();
+        // } catch (e) {
+        //   console.error('Error while closing plugin:', e);
+        // }
 
         try {
           sri4nodeServerInstance.close();

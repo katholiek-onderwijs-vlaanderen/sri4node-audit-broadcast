@@ -34,7 +34,7 @@
     "mocha": "^10.3.0",
     "prettier": "^3.2.5",
     "sinon": "^17.0.1",
-    "sri4node": "github:katholiek-onderwijs-vlaanderen/sri4node#master"
+    "sri4node": "github:katholiek-onderwijs-vlaanderen/sri4node"
   },
   "repository": {
     "type": "git",
