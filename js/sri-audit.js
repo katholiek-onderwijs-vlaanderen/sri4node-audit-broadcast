@@ -20,7 +20,7 @@ const { v4: uuid } = require('uuid');
  * @param {import('sri4node').TSriRequest} sriRequest
  * @param {Array<{ permalink: string; incoming: Record<string, any>; stored: Record<string, any>;}>} elements
  * @param {string} component
- * @param {'CREATE' | 'READ' | 'UPDATE' | 'DELETE'} operation
+ * @param {'CREATE' | 'UPDATE' | 'DELETE'} operation
  * @param {import('sri4node').TResourceDefinition} mapping
  * @param {TSri4Node} sri4node
  */
