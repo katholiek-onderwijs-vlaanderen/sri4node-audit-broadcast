@@ -15,7 +15,7 @@ const versionsQueue = require('./versionsQueue');
 /**
  * This is the function that will be set as an after (insert/delete/update) hook in sri4node.
  *
- * @param {any} tx database transaction from pg-promise
+ * @param {import('pg-promise').IDatabase<any>} tx database transaction from pg-promise
  * @param {TSri4NodeAuditBroadcastPluginConfig} pluginConfig
  * @param {import('sri4node').TSriRequest} sriRequest
  * @param {Array<{ permalink: string; incoming: Record<string, any>; stored: Record<string, any>;}>} elements
@@ -161,6 +161,5 @@ function sri4NodeAuditBroadcastPluginFactory(pluginConfig, sri4node) {
 }
 
 module.exports = {
-  cleanupDocument, // exposed mainly for unit tests
   sri4NodeAuditBroadcastPluginFactory,
 };
