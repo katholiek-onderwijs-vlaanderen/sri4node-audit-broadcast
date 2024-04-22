@@ -88,7 +88,7 @@ function sri4NodeAuditBroadcastPluginFactory(pluginConfig, sri4node) {
   return {
     uuid: 'f06cab52-eb87-11ee-9a22-00155d328834',
     /**
-     * @param {TSriConfig} sriConfig
+     * @param {import('sri4node').TSriConfig} sriConfig
      * @param {import('pg-promise').IDatabase<any>} db
      */
     install: async function (sriConfig, db) {

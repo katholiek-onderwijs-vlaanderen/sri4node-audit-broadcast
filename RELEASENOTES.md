@@ -37,7 +37,7 @@ cfr. [keepachangelog.com](https://keepachangelog.com/en/1.1.0/)
 
 ### Changed
 
-- const auditBroadcastSri4NodePluginFactory = require('sri4node-audit-broadcast'); has to be changed to const { sri4NodeAuditBroadcastPluginFactory } = require('sri4node-audit-broadcast');
+- `const auditBroadcastSri4NodePluginFactory = require('sri4node-audit-broadcast');` has to be changed to `const { sri4NodeAuditBroadcastPluginFactory } = require('sri4node-audit-broadcast');`
 - omitProperties have been improved
 
   - uses regex notation for matching the path now, so you can do a lot more than before.
