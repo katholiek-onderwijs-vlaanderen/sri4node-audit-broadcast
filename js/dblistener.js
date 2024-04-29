@@ -4,15 +4,23 @@
  * @typedef {import('sri4node').TPluginConfig} TPluginConfig
  */
 
+/** @type {import('pg-promise').IDatabase} */
 let db;
 
+/** @type {import('pg-promise').IConnected} */
 let connection;
 let channelName;
+/** @type {(any) => Promise<void>} */
 let runOnNotif;
+/** @type {(Error) => void} */
 let runOnError;
 /** @type {TSri4Node} */
 let sri4node;
 
+/**
+ *
+ * @param {{ payload: any }} data
+ */
 async function onNotification(data) {
   try {
     sri4node.debug('sri-audit', `[onNotification] Received version: ${data.payload}`);
@@ -78,10 +86,10 @@ function reconnect(delay, maxAttempts) {
 
 /**
  *
- * @param {*} channel
- * @param {*} onError
- * @param {*} onNotif
- * @param {*} dbObj
+ * @param {string} channel
+ * @param {(Error) => void} onError
+ * @param {(any) => Promise<void>} onNotif
+ * @param {import('pg-promise').IDatabase} dbObj
  * @param {TSri4Node} pSri4node
  */
 function connect(channel, onError, onNotif, dbObj, pSri4node) {
@@ -103,4 +111,10 @@ function connect(channel, onError, onNotif, dbObj, pSri4node) {
 
 module.exports = {
   connect,
+  close: () => {
+    if (connection) {
+      removeListeners(connection.client);
+      connection.done();
+    }
+  },
 };

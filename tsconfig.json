@@ -5,13 +5,16 @@
     "noImplicitAny": false,
     "outDir": "./dist",
     //"rootDir": "./src",
-    "module": "commonjs",
+    "module": "Node16",
     "sourceMap": true,
     // "isolatedModules": true,
     "allowJs": true,
     "checkJs": true,
     "declaration": true,
-    "moduleResolution": "node"
+    // 2024-04: VSCode underlines it as an error, but otherwise importing the sri4node types
+    // in JSDoc annotations does not work!!!
+    // (example: /** @typedef {import('sri4node').TSriConfig} TSriConfig */)
+    "moduleResolution": "Node"
   },
   "exclude": ["node_modules"]
 }
