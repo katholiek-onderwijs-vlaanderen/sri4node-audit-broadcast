@@ -10,7 +10,7 @@
   "scripts": {
     "test": "docker compose -f test/docker/docker-compose.yml down --remove-orphans --rmi=local && docker compose -f test/docker/docker-compose.yml up --wait postgres && docker compose -f test/docker/docker-compose.yml logs && mocha",
     "test:skipintegrationtests": "SKIP_INTEGRATION_TESTS=true mocha",
-    "prepare": "echo \"\n\n----------> $(pwd)\nls .git\n-------\n$(ls .git)\n\n\"\n(\n    case \"$(pwd)\" in\n        *\"/node_modules\"*) echo \"Not setting git core.hooksPath (installed as a dependency)\";;\n        *) git config core.hooksPath ./git-hooks && echo \"git core.hooksPath has been set to: $(git config core.hooksPath)\";;\n    esac\n  )\n"
+    "prepare": "if [ -d .git ]; then git config core.hooksPath ./git-hooks && echo \"git core.hooksPath has been set to: $(git config core.hooksPath)\"; else echo \"Not setting git core.hooksPath (installed as a dependency)\"; fi"
   },
   "dependencies": {
     "fetch-retry": "^5.0.6",
