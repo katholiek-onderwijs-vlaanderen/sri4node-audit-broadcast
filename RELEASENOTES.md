@@ -25,6 +25,13 @@ cfr. [keepachangelog.com](https://keepachangelog.com/en/1.1.0/)
 
 ### Security
 
+## [v2.3.8] - 2024-05-13
+
+### Fixed
+
+- Fixed the prepare script in package.json, so it will work when installed as a dependency,
+  and when installed locally for developement (in which case the git-hooks will be installed)
+
 ## [v2.3.7] - 2024-03-28
 
 ### Added
