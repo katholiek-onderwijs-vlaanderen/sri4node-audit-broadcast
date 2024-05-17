@@ -72,7 +72,7 @@ const putVersion = async function (sri4node, pluginConfig, db, versionApiDoc) {
         sri4node.debug('sri-audit', '[sri-audit] version was same version.');
       } else {
         sri4node.error(
-          `[putVersion] WARNING: putting doc with key ${versionApiDoc.key} failed with status code: ${resp.statusCode}`,
+          `[putVersion] WARNING: putting doc with key ${versionApiDoc.key} failed with status code: ${resp.status}`,
           body && body.errors ? JSON.stringify(body.errors, null, 2) : '',
         );
       }

@@ -23,6 +23,12 @@ cfr. [keepachangelog.com](https://keepachangelog.com/en/1.1.0/)
 
 ### Fixed
 
+## [v2.3.9] - 2024-05-17
+
+### Fixed
+
+- Fixed logging of status code when put to version api fails
+
 ### Security
 
 ## [v2.3.8] - 2024-05-13
