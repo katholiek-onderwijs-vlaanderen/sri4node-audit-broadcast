@@ -27,8 +27,8 @@ const putVersion = async function (sri4node, pluginConfig, db, versionApiDoc) {
       ...versionApiDoc,
       document: cleanupDocument(pluginConfig?.omitProperties?.[type], versionApiDoc.document),
     };
-
-    const resp = await fetch(pluginConfig.versionApiBase + '/versions/' + versionApiDoc.key, {
+    const url = pluginConfig.versionApiBase + '/versions/' + versionApiDoc.key;
+    const resp = await fetch(url, {
       method: 'PUT',
       body: JSON.stringify(cleanVersionApiDoc),
       headers: {
@@ -47,7 +47,7 @@ const putVersion = async function (sri4node, pluginConfig, db, versionApiDoc) {
         // retry on any network error, or 5xx status codes
         if (error !== null || response.status >= 500) {
           console.log(
-            `retrying, attempt number ${attempt + 1} caused by ${
+            `[sri-audit] retrying ${url}, attempt number ${attempt + 1} caused by ${
               error
                 ? error
                 : `response status ${response.status} ${response.statusText}: ${response.text()}`

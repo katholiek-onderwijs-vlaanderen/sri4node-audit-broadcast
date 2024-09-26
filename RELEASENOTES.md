@@ -23,6 +23,12 @@ cfr. [keepachangelog.com](https://keepachangelog.com/en/1.1.0/)
 
 ### Fixed
 
+## [v2.3.10] - 2024-09-26
+
+### Changed
+
+- Improved logging: now the url is logged when rertry is attempted
+
 ## [v2.3.9] - 2024-05-17
 
 ### Fixed
