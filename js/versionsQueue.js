@@ -21,6 +21,7 @@ const { cleanupDocument } = require('./utils.js');
  * @returns
  */
 const putVersion = async function (sri4node, pluginConfig, db, versionApiDoc) {
+  sri4node.debug('sri-audit', '[sri-audit] putVersion /versions/' + versionApiDoc.key);
   try {
     const type = sri4node.utils.urlToTypeAndKey(versionApiDoc.resource).type;
     const cleanVersionApiDoc = {
@@ -28,6 +29,8 @@ const putVersion = async function (sri4node, pluginConfig, db, versionApiDoc) {
       document: cleanupDocument(pluginConfig?.omitProperties?.[type], versionApiDoc.document),
     };
     const url = pluginConfig.versionApiBase + '/versions/' + versionApiDoc.key;
+    sri4node.debug('sri-audit', 'GOING TO PUT ' + url);
+    sri4node.debug('sri-audit', JSON.stringify(cleanVersionApiDoc));
     const resp = await fetch(url, {
       method: 'PUT',
       body: JSON.stringify(cleanVersionApiDoc),
@@ -96,6 +99,7 @@ const putVersion = async function (sri4node, pluginConfig, db, versionApiDoc) {
 async function runJob(sri4node, pluginConfig, db, jobkey) {
   try {
     //get the item from the DB
+    sri4node.debug('sri-audit', '[sri-audit] starting job ' + jobkey);
     let job = await db.one('SELECT * FROM "versionsQueue" WHERE key = $1', jobkey);
     //run it
     await putVersion(sri4node, pluginConfig, db, job.document);
@@ -139,6 +143,7 @@ async function runJobsFromDB(sri4node, pluginConfig, db) {
   sri4node.debug('sri-audit', '[sri-audit] found ' + jobsToRun.length + ' versions on startup');
   for (let job of jobsToRun) {
     queue.add(async function () {
+      sri4node.debug('sri-audit', '[sri-audit] adding job ' + job.key + ' to queue');
       await runJob(sri4node, pluginConfig, db, job.key);
     });
   }
