@@ -1,5 +1,4 @@
-const originalFetch = require('node-fetch-commonjs');
-const fetch = require('fetch-retry')(originalFetch);
+const fetch = require('fetch-retry')(global.fetch);
 
 const PQueue = require('p-queue');
 const queue = new PQueue({ concurrency: 2 });
@@ -37,9 +36,6 @@ const putVersion = async function (sri4node, pluginConfig, db, versionApiDoc) {
       headers: {
         ...pluginConfig.headers,
         'content-type': 'application/json; charset=utf-8',
-        Authorization:
-          'Basic ' +
-          Buffer.from(pluginConfig.auth.user + ':' + pluginConfig.auth.pass).toString('base64'),
       },
 
       // retry options
