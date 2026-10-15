@@ -261,10 +261,6 @@ function runTests(pluginModule, moduleType) {
           versionApiBase: 'http://localhost:3000',
           component: 'test',
           headers: [],
-          auth: {
-            user: 'john',
-            pass: 'johnssecret',
-          },
           omitProperties: {
             '/documents': ['longSrc', '\\$\\$something'],
           },
