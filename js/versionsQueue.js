@@ -29,7 +29,7 @@ const putVersion = async function (sri4node, pluginConfig, db, versionApiDoc) {
     };
     const url = pluginConfig.versionApiBase + '/versions/' + versionApiDoc.key;
     sri4node.debug('sri-audit', 'GOING TO PUT ' + url);
-    sri4node.debug('sri-audit', JSON.stringify(cleanVersionApiDoc));
+    sri4node.debug('sri-audit', '[sri-audit] sending version ' + cleanVersionApiDoc.key);
     const resp = await fetch(url, {
       method: 'PUT',
       body: JSON.stringify(cleanVersionApiDoc),
