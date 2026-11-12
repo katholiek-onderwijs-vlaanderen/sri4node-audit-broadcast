@@ -4,7 +4,7 @@ An sri4node plugin to send updated resources to an audit server.
 
 ## Requirements
 
-- An sri4node api
+- An sri4node api with @kathondvla/fetch-oauth-interceptor-app-registration plugin installed and configured to provide a bearer token as authentication on the calls to the sri-audit-broadcast server
 - A sri-audit-broadcast server (having a /versions resource where we can store every new version of any resource handled by the current api)
 
 ## Usage
@@ -19,10 +19,6 @@ const auditBroadcastPlugin = sri4NodeAuditBroadcastPluginFactory(
     baseUrl: configuration.audit.host,
     headers: {
       headerName: "value"
-    },
-    auth: {
-      user: "username",
-      pass: "password"
     },
     // read more about omitProperties below
     omitProperties: {
