@@ -18,8 +18,7 @@
     "node-fetch-commonjs": "^3.3.2",
     "p-map": "^4.0.0",
     "p-queue": "^4.0.0",
-    "recursive-iterator": "^3.3.0",
-    "uuid": "^9.0.1"
+    "recursive-iterator": "^3.3.0"
   },
   "devDependencies": {
     "@types/chai": "^4.3.12",
@@ -28,13 +27,12 @@
     "@types/sinon": "^17.0.3",
     "await-sleep": "^0.0.1",
     "chai": "^5.1.0",
-    "eslint-config-prettier": "^9.1.0",
     "express": "^4.19.2",
     "lint-staged": "^15.2.2",
-    "mocha": "^10.3.0",
+    "mocha": "^12.0.3",
     "prettier": "^3.2.5",
     "sinon": "^17.0.1",
-    "sri4node": "github:katholiek-onderwijs-vlaanderen/sri4node"
+    "sri4node": "github:katholiek-onderwijs-vlaanderen/sri4node#v2.3.48"
   },
   "repository": {
     "type": "git",
@@ -42,5 +40,9 @@
   },
   "lint-staged": {
     "*": "prettier --ignore-unknown --write"
+  },
+  "overrides": {
+    "glob": "^14.0.2",
+    "minimatch": "^11.0.1"
   }
 }
