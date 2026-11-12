@@ -23,6 +23,18 @@ cfr. [keepachangelog.com](https://keepachangelog.com/en/1.1.0/)
 
 ### Fixed
 
+## [v2.3.13] - 2026-11-12
+
+### Changed
+
+- use new global fetch provided by nodejs and remove basic auth (the api needs to provide a fetch interceptor on it to add authentication)
+- added extra logging
+- delete js/index.d.ts
+
+### Fixed
+
+- update all deps to fix all vulnarebilities reported by npm audit
+
 ## [v2.3.10] - 2024-09-26
 
 ### Changed
