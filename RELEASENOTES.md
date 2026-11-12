@@ -33,7 +33,7 @@ cfr. [keepachangelog.com](https://keepachangelog.com/en/1.1.0/)
 
 ### Fixed
 
-- update all deps to fix all vulnarebilities reported by npm audit
+- update all deps to fix all vulnerabilities reported by npm audit
 
 ## [v2.3.10] - 2024-09-26
 
