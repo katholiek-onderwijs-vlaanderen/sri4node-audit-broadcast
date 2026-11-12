@@ -1,5 +1,5 @@
 const pMap = require('p-map');
-const { v4: uuid } = require('uuid');
+const { randomUUID: uuid } = require('node:crypto');
 const { cleanupDocument } = require('./utils.js');
 
 const versionsQueue = require('./versionsQueue');
